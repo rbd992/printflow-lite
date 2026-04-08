@@ -1,7 +1,7 @@
-﻿{
+{
   "name": "printflow-lite",
   "version": "0.1.4-beta",
-  "description": "PrintFlow Lite â€” Standalone 3D Print Business Suite",
+  "description": "PrintFlow Lite — Standalone 3D Print Business Suite",
   "main": "src/main/main.js",
   "author": {
     "name": "Robert Dunn",
@@ -11,7 +11,7 @@
   "scripts": {
     "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "react-start": "cross-env REACT_APP_LITE=true react-scripts start",
-    "react-build": "cross-env REACT_APP_LITE=true react-scripts build",
+    "react-build": "cross-env CI=false REACT_APP_LITE=true react-scripts build",
     "electron-dev": "ELECTRON_START_URL=http://localhost:3000 REACT_APP_LITE=true electron .",
     "build": "npm run react-build && electron-builder",
     "build:mac": "npm run react-build && electron-builder --mac",
@@ -43,7 +43,7 @@
   "build": {
     "appId": "com.printflow.lite",
     "productName": "PrintFlow Lite",
-    "copyright": "Copyright Â© 2026 PrintFlow",
+    "copyright": "Copyright © 2026 PrintFlow",
     "extends": null,
     "extraMetadata": {
       "main": "src/main/main.js"
