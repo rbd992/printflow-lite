@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('printflow', {
   onServerProgress: (cb)    => ipcRenderer.on('server:progress', (_, d) => cb(d)),
   onServerError:    (cb)    => ipcRenderer.on('server:error', (_, msg) => cb(msg)),
   onUpdateAvailable:(cb)    => ipcRenderer.on('update:available', (_, d) => cb(d)),
+  onUpdateChecking: (cb)    => ipcRenderer.on('update:checking', (_, v) => cb(v)),
 
   // Config
   getTheme:         ()      => ipcRenderer.invoke('config:getTheme'),

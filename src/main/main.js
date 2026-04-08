@@ -151,12 +151,22 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     if (isDev) mainWindow.webContents.openDevTools({ mode: 'detach' });
-    startServer().then(ok => {
+    // Run both tasks in parallel — server starts AND update check happen simultaneously
+    // This way the update check doesn't add any extra wait time
+    const serverTask = startServer().then(ok => {
       if (!ok) mainWindow?.webContents.send('server:error', 'Failed to start local server');
     });
-    checkForUpdates().then(result => {
+
+    // Signal renderer that we're checking for updates
+    mainWindow?.webContents.send('update:checking', true);
+    const updateTask = checkForUpdates().then(result => {
+      mainWindow?.webContents.send('update:checking', false);
       if (result.updateAvailable) mainWindow?.webContents.send('update:available', result);
+    }).catch(() => {
+      mainWindow?.webContents.send('update:checking', false);
     });
+
+    Promise.all([serverTask, updateTask]).catch(() => {});
   });
   mainWindow.on('resize', () => {
     const [w, h] = mainWindow.getSize();

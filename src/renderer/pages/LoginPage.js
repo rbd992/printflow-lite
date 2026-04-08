@@ -90,8 +90,8 @@ export default function LoginPage() {
     // Listen for server startup progress
     window.printflow?.onServerProgress?.(({ progress: pct, ready }) => {
       setProgress(pct);
-      if (pct < 50) setPhase('Starting up...');
-      else if (pct < 90) setPhase('Loading database...');
+      if (pct < 40) setPhase('Starting up...');
+      else if (pct < 80) setPhase('Loading database...');
       else if (ready) {
         setPhase('Ready');
         setServerReady(true);
@@ -102,6 +102,11 @@ export default function LoginPage() {
 
     window.printflow?.onServerError?.((msg) => {
       setPhase('Error starting server — try restarting the app');
+    });
+
+    // Update check events — shown in the loading bar phase text
+    window.printflow?.onUpdateChecking?.((checking) => {
+      if (checking) setPhase(prev => prev === 'Ready' ? prev : 'Checking for updates...');
     });
 
     window.printflow?.onUpdateAvailable?.((info) => {
