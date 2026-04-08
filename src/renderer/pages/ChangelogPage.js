@@ -2,7 +2,7 @@ import React from 'react';
 
 const CHANGELOG = [
   {
-    version: '0.1.2-beta',
+    version: '0.1.3-beta',
     date: 'April 2026',
     title: 'First Beta Release',
     highlights: ['Standalone app — no server required','5-step setup wizard','12-brand filament catalogue','Brand-agnostic maintenance tracker'],
