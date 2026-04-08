@@ -38,6 +38,8 @@
     "electron": "^29.1.4",
     "electron-builder": "^24.13.3",
     "electron-rebuild": "^3.2.9",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
     "wait-on": "^7.2.0"
   },
   "build": {
@@ -61,14 +63,27 @@
       {
         "from": "src/server",
         "to": "server",
-        "filter": ["**/*", "!*.log"]
+        "filter": [
+          "**/*",
+          "!*.log"
+        ]
       }
     ],
     "mac": {
       "category": "public.app-category.business",
       "target": [
-        { "target": "dmg", "arch": ["arm64"] },
-        { "target": "dmg", "arch": ["x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "assets/icon.icns",
       "darkModeSupport": true,
@@ -80,13 +95,31 @@
     "dmg": {
       "sign": false,
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ],
-      "window": { "width": 540, "height": 380 }
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "assets/icon.ico",
       "publisherName": "PrintFlow",
       "verifyUpdateCodeSignature": false,
@@ -101,7 +134,14 @@
       "deleteAppDataOnUninstall": false
     },
     "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "assets/icon.png",
       "category": "Office",
       "artifactName": "PrintFlowLite-${version}.AppImage"
@@ -114,7 +154,13 @@
     }
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
   }
 }

@@ -1,0 +1,23 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024">
+      <stop offset="0%" stop-color="#0c1029"/>
+      <stop offset="50%" stop-color="#111540"/>
+      <stop offset="100%" stop-color="#0a0e24"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="200" y1="150" x2="824" y2="874">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="50%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect x="2" y="2" width="1020" height="1020" rx="226" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+  <path d="M512 220L820 390V634L512 804L204 634V390L512 220Z" stroke="url(#logo)" stroke-width="2.5" fill="none" opacity="0.4"/>
+  <path d="M280 600L512 740L744 600" stroke="url(#logo)" stroke-width="28" stroke-linecap="round" opacity="0.5"/>
+  <path d="M280 520L512 660L744 520" stroke="url(#logo)" stroke-width="28" stroke-linecap="round" opacity="0.65"/>
+  <path d="M280 440L512 580L744 440" stroke="url(#logo)" stroke-width="28" stroke-linecap="round" opacity="0.8"/>
+  <path d="M280 360L512 500L744 360" stroke="url(#logo)" stroke-width="28" stroke-linecap="round" opacity="1.0"/>
+  <circle cx="512" cy="280" r="40" fill="url(#logo)"/>
+  <path d="M512 160V235" stroke="url(#logo)" stroke-width="16" stroke-linecap="round" stroke-dasharray="20 20" opacity="0.5"/>
+</svg>
