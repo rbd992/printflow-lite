@@ -106,7 +106,9 @@ export default function AppShell({ theme, onThemeChange }) {
 
   function toggleTheme() {
     const next = theme === 'dark' ? 'light' : 'dark';
-    onThemeChange(next); window.printflow.setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    onThemeChange(next);
+    window.printflow.setTheme(next);
   }
 
   return (

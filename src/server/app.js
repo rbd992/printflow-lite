@@ -27,7 +27,11 @@ const maintenanceRoutes  = require('./routes/maintenance'); // [BOTH] brand-agno
 
 const app = express();
 
-app.use(helmet());
+// Helmet with relaxed settings for Electron file:// origin
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false,
+}));
 
 // Lite: only allow localhost origins
 app.use(cors({

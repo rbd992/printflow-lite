@@ -221,19 +221,20 @@ export default function SetupWizard({ onComplete }) {
   const [currency,   setCurrency]   = useState('CAD');
   const [theme,      setTheme]      = useState('dark');
 
-  // Poll for server ready — the Finish button stays disabled until server responds
+  // Poll server ready via IPC — keeps polling every 500ms until ready
   useEffect(() => {
-    let interval;
-    const check = async () => {
-      try {
-        await setupApi.get('/health');
-        setServerReady(true);
-        clearInterval(interval);
-      } catch {}
-    };
-    check();
-    interval = setInterval(check, 1000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    async function poll() {
+      while (!cancelled) {
+        try {
+          const ready = await window.printflow?.serverIsReady?.();
+          if (ready) { setServerReady(true); return; }
+        } catch {}
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    poll();
+    return () => { cancelled = true; };
   }, []);
 
   function applyTheme(t) {
@@ -386,7 +387,7 @@ export default function SetupWizard({ onComplete }) {
         <Field label="Appearance">
           <div style={{ display: 'flex', gap: 8 }}>
             {[['dark','Dark'],['light','Light'],['system','System']].map(([v, l]) => (
-              <button key={v} onClick={() => applyTheme(v)} style={{
+              <button key={v} onClick={() => setTheme(v)} style={{
                 flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
                 background: theme === v ? 'rgba(0,113,227,0.15)' : 'rgba(255,255,255,0.04)',
                 border: theme === v ? '0.5px solid rgba(0,113,227,0.4)' : '0.5px solid rgba(255,255,255,0.08)',
@@ -395,11 +396,9 @@ export default function SetupWizard({ onComplete }) {
               }}>{l}</button>
             ))}
           </div>
-          {!serverReady && (
-            <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Spinner/> Waiting for server to be ready...
-            </div>
-          )}
+          <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+            Theme applies after setup — change anytime in Settings
+          </div>
         </Field>
         <ErrorBox msg={err}/>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
@@ -408,7 +407,9 @@ export default function SetupWizard({ onComplete }) {
             <PrimaryBtn disabled={saving || !serverReady} onClick={finishSetup}>
               {saving
                 ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Spinner/> Setting up...</span>
-                : !serverReady ? 'Waiting for server...' : 'Finish Setup'
+                : !serverReady
+                  ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Spinner/> Starting server...</span>
+                  : 'Finish Setup'
               }
             </PrimaryBtn>
           </div>
