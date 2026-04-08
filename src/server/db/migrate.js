@@ -120,6 +120,11 @@ const migrations = [
   },
   {
     version: 2,
+    name: 'add_camera_url_to_printers',
+    sql: `ALTER TABLE printers ADD COLUMN camera_url TEXT;`,
+  },
+  {
+    version: 3,
     name: 'default_vendors_and_settings',
     sql: `
       INSERT OR IGNORE INTO vendors (name, website_url, notes) VALUES
