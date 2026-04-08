@@ -14,9 +14,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: cd src/server && npm install
-      - run: npm run react-build
+      - name: Install frontend deps
+        run: npm install
+      - name: Install server deps
+        run: cd src/server && npm install
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3 --module-dir src/server
+        env:
+          npm_config_msvs_version: '2019'
+      - name: Build React
+        run: npm run react-build
       - name: Build Mac DMG
         run: npx electron-builder --mac --publish never
         env:
@@ -35,9 +42,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: cd src/server && npm install
-      - run: npm run react-build
+      - name: Install frontend deps
+        run: npm install
+      - name: Install server deps
+        run: cd src/server && npm install
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3 --module-dir src/server
+        env:
+          npm_config_msvs_version: '2019'
+      - name: Build React
+        run: npm run react-build
       - name: Build Windows EXE
         uses: nick-fields/retry@v3
         with:
@@ -59,9 +73,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: cd src/server && npm install
-      - run: npm run react-build
+      - name: Install frontend deps
+        run: npm install
+      - name: Install server deps
+        run: cd src/server && npm install
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3 --module-dir src/server
+      - name: Build React
+        run: npm run react-build
       - name: Build Linux AppImage
         run: npx electron-builder --linux AppImage --publish never
         env:
@@ -104,7 +123,7 @@ jobs:
         id: ver
         run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
 
-      - name: Create or update GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.VERSION }}

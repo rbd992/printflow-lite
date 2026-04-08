@@ -211,6 +211,7 @@ export default function SetupWizard({ onComplete }) {
   const [saving, setSaving]   = useState(false);
   const [err, setErr]         = useState('');
   const [serverReady, setServerReady] = useState(false);
+  const [serverFailed, setServerFailed] = useState(false);
 
   const [bizName,    setBizName]    = useState('');
   const [bizEmail,   setBizEmail]   = useState('');
@@ -221,15 +222,21 @@ export default function SetupWizard({ onComplete }) {
   const [currency,   setCurrency]   = useState('CAD');
   const [theme,      setTheme]      = useState('dark');
 
-  // Poll server ready via IPC — keeps polling every 500ms until ready
+  // Poll server ready via IPC — timeout after 30s and show error
   useEffect(() => {
     let cancelled = false;
+    const startTime = Date.now();
     async function poll() {
       while (!cancelled) {
         try {
           const ready = await window.printflow?.serverIsReady?.();
           if (ready) { setServerReady(true); return; }
         } catch {}
+        // After 30s give up and show a helpful error
+        if (Date.now() - startTime > 30000) {
+          setServerFailed(true);
+          return;
+        }
         await new Promise(r => setTimeout(r, 500));
       }
     }
@@ -407,9 +414,11 @@ export default function SetupWizard({ onComplete }) {
             <PrimaryBtn disabled={saving || !serverReady} onClick={finishSetup}>
               {saving
                 ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Spinner/> Setting up...</span>
-                : !serverReady
-                  ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Spinner/> Starting server...</span>
-                  : 'Finish Setup'
+                : serverFailed
+                  ? 'Server failed to start — restart the app'
+                  : !serverReady
+                    ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Spinner/> Starting server...</span>
+                    : 'Finish Setup'
               }
             </PrimaryBtn>
           </div>
