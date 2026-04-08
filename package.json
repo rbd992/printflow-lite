@@ -10,8 +10,8 @@
   "homepage": "./",
   "scripts": {
     "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
-    "react-start": "REACT_APP_LITE=true react-scripts start",
-    "react-build": "REACT_APP_LITE=true react-scripts build",
+    "react-start": "cross-env REACT_APP_LITE=true react-scripts start",
+    "react-build": "cross-env REACT_APP_LITE=true react-scripts build",
     "electron-dev": "ELECTRON_START_URL=http://localhost:3000 REACT_APP_LITE=true electron .",
     "build": "npm run react-build && electron-builder",
     "build:mac": "npm run react-build && electron-builder --mac",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "axios": "^1.6.8",
+    "cross-env": "^7.0.3",
     "date-fns": "^3.3.1",
     "electron-store": "^8.2.0",
     "framer-motion": "^11.0.8",
@@ -64,7 +65,10 @@
     ],
     "mac": {
       "category": "public.app-category.business",
-      "target": [{ "target": "dmg", "arch": ["universal"] }],
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] },
+        { "target": "dmg", "arch": ["x64"] }
+      ],
       "icon": "assets/icon.icns",
       "darkModeSupport": true,
       "hardenedRuntime": true,
