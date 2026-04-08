@@ -1,9 +1,19 @@
 const winston = require('winston');
 const path = require('path');
 const fs   = require('fs');
+const os   = require('os');
 
-const LOG_DIR = process.env.LOG_DIR || './logs';
-if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+// Use LOG_DIR env var, fall back to a safe writable temp directory
+const LOG_DIR = process.env.LOG_DIR
+  ? process.env.LOG_DIR
+  : path.join(os.tmpdir(), 'printflow-lite-logs');
+
+try {
+  if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+} catch (e) {
+  // If we can't create logs dir, continue without file logging
+  console.error('[logger] Could not create log dir:', e.message);
+}
 
 const fmt = winston.format;
 const logger = winston.createLogger({

@@ -1,11 +1,20 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs   = require('fs');
+const os   = require('os');
 const logger = require('../services/logger');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../../data/printflow.db');
+// Use DB_PATH env var, fall back to a safe writable location
+const DB_PATH = process.env.DB_PATH
+  ? process.env.DB_PATH
+  : path.join(os.homedir(), 'PrintFlowLite', 'data', 'printflow.db');
+
 const dir = path.dirname(DB_PATH);
-if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+try {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+} catch (e) {
+  console.error('[db] Could not create data dir:', e.message);
+}
 
 let _db;
 
