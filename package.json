@@ -1,6 +1,6 @@
 {
   "name": "printflow-lite",
-  "version": "0.1.4-beta",
+  "version": "0.1.5-beta",
   "description": "PrintFlow Lite — Standalone 3D Print Business Suite",
   "main": "src/main/main.js",
   "author": {
