@@ -11,30 +11,23 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - run: npm install
-      - run: npm run react-build
+      - name: Install frontend deps
+        run: npm install
 
-      # ── Ad-hoc sign for Mac (free) ───────────────────────────────────────
-      # This removes the "app is damaged" error. Users still need to
-      # right-click → Open on first launch, but the scary message is gone.
-      # To fully eliminate this, enroll in Apple Developer Program ($99/yr)
-      # and add CSC_LINK + CSC_KEY_PASSWORD + APPLE_ID secrets.
-      - name: Build Mac DMG (ad-hoc signed)
+      - name: Install server deps
+        run: cd src/server && npm install
+
+      - name: Build React app
+        run: npm run react-build
+
+      - name: Build Mac DMG
         run: npx electron-builder --mac --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          # Ad-hoc sign: set to '-' to use local ad-hoc signing
-          # Swap these for real certs when available:
-          # CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
-          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v4
@@ -47,25 +40,18 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - run: npm install
-      - run: npm run react-build
+      - name: Install frontend deps
+        run: npm install
 
-      # ── Azure Trusted Signing (free for open source) ─────────────────────
-      # Eliminates Windows SmartScreen "Keep anyway" warning.
-      # Setup: https://learn.microsoft.com/en-us/azure/trusted-signing/
-      # Free tier: sign up at portal.azure.com, create Trusted Signing account
-      # Add these secrets: AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET,
-      #                    AZURE_ENDPOINT, AZURE_CODE_SIGNING_NAME, AZURE_CERT_PROFILE
-      - name: Install Azure Trusted Signing plugin
-        if: ${{ env.AZURE_CLIENT_ID != '' }}
-        run: npm install --save-dev @azure/trusted-signing-action
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      - name: Install server deps
+        run: cd src/server && npm install
+
+      - name: Build React app
+        run: npm run react-build
 
       - name: Build Windows EXE
         uses: nick-fields/retry@v3
@@ -75,13 +61,6 @@ jobs:
           command: npx electron-builder --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Uncomment when Azure Trusted Signing secrets are configured:
-          # WIN_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          # WIN_AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          # WIN_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          # WIN_AZURE_ENDPOINT: ${{ secrets.AZURE_ENDPOINT }}
-          # WIN_AZURE_CODE_SIGNING_NAME: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
-          # WIN_AZURE_CERT_PROFILE_NAME: ${{ secrets.AZURE_CERT_PROFILE }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -93,13 +72,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - run: npm install
-      - run: npm run react-build
+      - name: Install frontend deps
+        run: npm install
+
+      - name: Install server deps
+        run: cd src/server && npm install
+
+      - name: Build React app
+        run: npm run react-build
 
       - name: Build Linux AppImage
         run: npx electron-builder --linux AppImage --publish never
@@ -148,25 +132,19 @@ jobs:
             ## PrintFlow Lite v${{ steps.ver.outputs.VERSION }}
 
             ### Installation
-            **Mac:**
-            Download `.dmg`, open, drag PrintFlow Lite to Applications.
-            > First launch: right-click the app → Open → Open (Apple security step — happens once only)
+            **Mac:** Download `.dmg`, open, drag to Applications.
+            > First launch: right-click → Open → Open (one-time Apple security step)
 
-            **Windows:**
-            Download and run `.exe` installer.
-            > If SmartScreen appears: click "More info" → "Run anyway"
+            **Windows:** Download and run `.exe`.
+            > If SmartScreen appears: More info → Run anyway
 
             **Linux:**
             ```bash
-            chmod +x PrintFlowLite-*.AppImage
-            ./PrintFlowLite-*.AppImage
+            chmod +x PrintFlowLite-*.AppImage && ./PrintFlowLite-*.AppImage
             ```
 
             ### What's new
             See the Changelog tab inside the app for full release notes.
-
-            ---
-            *Signing note: The Mac build is ad-hoc signed. The one-time right-click → Open step is normal for indie apps without an Apple Developer subscription.*
           files: |
             dist/*.dmg
             dist/*.exe

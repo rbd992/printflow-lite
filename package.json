@@ -16,30 +16,20 @@
     "build": "npm run react-build && electron-builder",
     "build:mac": "npm run react-build && electron-builder --mac",
     "build:win": "npm run react-build && electron-builder --win",
-    "build:linux": "npm run react-build && electron-builder --linux AppImage"
+    "build:linux": "npm run react-build && electron-builder --linux AppImage",
+    "install-server": "cd src/server && npm install"
   },
   "dependencies": {
     "axios": "^1.6.8",
-    "better-sqlite3": "^9.4.3",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
     "date-fns": "^3.3.1",
     "electron-store": "^8.2.0",
-    "express": "^4.18.3",
-    "express-rate-limit": "^7.2.0",
-    "express-validator": "^7.0.1",
     "framer-motion": "^11.0.8",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
     "react-scripts": "5.0.1",
     "recharts": "^2.12.2",
-    "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
-    "winston": "^3.13.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -63,34 +53,24 @@
     "files": [
       "build/**/*",
       "src/main/**/*",
-      "src/server/**/*",
-      "node_modules/**/*",
       "package.json"
     ],
     "extraResources": [
       {
         "from": "src/server",
         "to": "server",
-        "filter": ["**/*", "!node_modules", "!*.log"]
+        "filter": ["**/*", "!*.log"]
       }
     ],
     "mac": {
       "category": "public.app-category.business",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": ["universal"]
-        }
-      ],
+      "target": [{ "target": "dmg", "arch": ["universal"] }],
       "icon": "assets/icon.icns",
       "darkModeSupport": true,
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "assets/entitlements.mac.plist",
-      "entitlementsInherit": "assets/entitlements.mac.plist",
-      "extendInfo": {
-        "NSHighResolutionCapable": true
-      }
+      "entitlementsInherit": "assets/entitlements.mac.plist"
     },
     "dmg": {
       "sign": false,
@@ -101,12 +81,7 @@
       "window": { "width": 540, "height": 380 }
     },
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        }
-      ],
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
       "icon": "assets/icon.ico",
       "publisherName": "PrintFlow",
       "verifyUpdateCodeSignature": false,
@@ -118,18 +93,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "PrintFlow Lite",
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico",
-      "installerHeaderIcon": "assets/icon.ico",
       "deleteAppDataOnUninstall": false
     },
     "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": ["x64"]
-        }
-      ],
+      "target": [{ "target": "AppImage", "arch": ["x64"] }],
       "icon": "assets/icon.png",
       "category": "Office",
       "artifactName": "PrintFlowLite-${version}.AppImage"
