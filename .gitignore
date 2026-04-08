@@ -1,0 +1,11 @@
+node_modules/
+build/
+dist/
+.DS_Store
+*.dmg
+*.exe
+*.AppImage
+*.log
+.env
+src/server/data/
+src/server/logs/

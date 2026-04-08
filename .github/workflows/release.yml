@@ -1,0 +1,177 @@
+name: Build & Release PrintFlow Lite
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+      - run: npm run react-build
+
+      # ── Ad-hoc sign for Mac (free) ───────────────────────────────────────
+      # This removes the "app is damaged" error. Users still need to
+      # right-click → Open on first launch, but the scary message is gone.
+      # To fully eliminate this, enroll in Apple Developer Program ($99/yr)
+      # and add CSC_LINK + CSC_KEY_PASSWORD + APPLE_ID secrets.
+      - name: Build Mac DMG (ad-hoc signed)
+        run: npx electron-builder --mac --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          # Ad-hoc sign: set to '-' to use local ad-hoc signing
+          # Swap these for real certs when available:
+          # CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-dmg
+          path: dist/*.dmg
+          retention-days: 7
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+      - run: npm run react-build
+
+      # ── Azure Trusted Signing (free for open source) ─────────────────────
+      # Eliminates Windows SmartScreen "Keep anyway" warning.
+      # Setup: https://learn.microsoft.com/en-us/azure/trusted-signing/
+      # Free tier: sign up at portal.azure.com, create Trusted Signing account
+      # Add these secrets: AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET,
+      #                    AZURE_ENDPOINT, AZURE_CODE_SIGNING_NAME, AZURE_CERT_PROFILE
+      - name: Install Azure Trusted Signing plugin
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
+        run: npm install --save-dev @azure/trusted-signing-action
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+
+      - name: Build Windows EXE
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          command: npx electron-builder --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Uncomment when Azure Trusted Signing secrets are configured:
+          # WIN_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          # WIN_AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          # WIN_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          # WIN_AZURE_ENDPOINT: ${{ secrets.AZURE_ENDPOINT }}
+          # WIN_AZURE_CODE_SIGNING_NAME: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+          # WIN_AZURE_CERT_PROFILE_NAME: ${{ secrets.AZURE_CERT_PROFILE }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: dist/*.exe
+          retention-days: 7
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+      - run: npm run react-build
+
+      - name: Build Linux AppImage
+        run: npx electron-builder --linux AppImage --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: dist/*.AppImage
+          retention-days: 7
+
+  release:
+    needs: [build-mac, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: mac-dmg
+          path: ./dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-exe
+          path: ./dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-appimage
+          path: ./dist
+
+      - name: Get version
+        id: ver
+        run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.VERSION }}
+          name: PrintFlow Lite v${{ steps.ver.outputs.VERSION }}
+          body: |
+            ## PrintFlow Lite v${{ steps.ver.outputs.VERSION }}
+
+            ### Installation
+            **Mac:**
+            Download `.dmg`, open, drag PrintFlow Lite to Applications.
+            > First launch: right-click the app → Open → Open (Apple security step — happens once only)
+
+            **Windows:**
+            Download and run `.exe` installer.
+            > If SmartScreen appears: click "More info" → "Run anyway"
+
+            **Linux:**
+            ```bash
+            chmod +x PrintFlowLite-*.AppImage
+            ./PrintFlowLite-*.AppImage
+            ```
+
+            ### What's new
+            See the Changelog tab inside the app for full release notes.
+
+            ---
+            *Signing note: The Mac build is ad-hoc signed. The one-time right-click → Open step is normal for indie apps without an Apple Developer subscription.*
+          files: |
+            dist/*.dmg
+            dist/*.exe
+            dist/*.AppImage
+          draft: false
+          prerelease: ${{ contains(steps.ver.outputs.VERSION, 'beta') || contains(steps.ver.outputs.VERSION, 'alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
