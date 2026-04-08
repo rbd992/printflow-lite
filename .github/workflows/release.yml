@@ -14,22 +14,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install frontend deps
-        run: npm install
-
-      - name: Install server deps
-        run: cd src/server && npm install
-
-      - name: Build React app
-        run: npm run react-build
-
+      - run: npm install
+      - run: cd src/server && npm install
+      - run: npm run react-build
       - name: Build Mac DMG
         run: npx electron-builder --mac --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: actions/upload-artifact@v4
         with:
           name: mac-dmg
@@ -43,16 +35,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install frontend deps
-        run: npm install
-
-      - name: Install server deps
-        run: cd src/server && npm install
-
-      - name: Build React app
-        run: npm run react-build
-
+      - run: npm install
+      - run: cd src/server && npm install
+      - run: npm run react-build
       - name: Build Windows EXE
         uses: nick-fields/retry@v3
         with:
@@ -61,7 +46,6 @@ jobs:
           command: npx electron-builder --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: actions/upload-artifact@v4
         with:
           name: windows-exe
@@ -75,21 +59,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install frontend deps
-        run: npm install
-
-      - name: Install server deps
-        run: cd src/server && npm install
-
-      - name: Build React app
-        run: npm run react-build
-
+      - run: npm install
+      - run: cd src/server && npm install
+      - run: npm run react-build
       - name: Build Linux AppImage
         run: npx electron-builder --linux AppImage --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
@@ -103,6 +79,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -119,11 +97,14 @@ jobs:
           name: linux-appimage
           path: ./dist
 
+      - name: List dist files
+        run: ls -la dist/
+
       - name: Get version
         id: ver
         run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.VERSION }}
@@ -132,10 +113,13 @@ jobs:
             ## PrintFlow Lite v${{ steps.ver.outputs.VERSION }}
 
             ### Installation
-            **Mac:** Download `.dmg`, open, drag to Applications.
-            > First launch: right-click → Open → Open (one-time Apple security step)
 
-            **Windows:** Download and run `.exe`.
+            **Mac (Apple Silicon M1–M4):** Download `arm64.dmg`
+            **Mac (Intel):** Download the regular `.dmg`
+            > First launch: right-click → Open → Open (one-time Apple security step)
+            > If you see "damaged": run `xattr -cr "/Applications/PrintFlow Lite.app"` in Terminal
+
+            **Windows:** Download and run `.exe`
             > If SmartScreen appears: More info → Run anyway
 
             **Linux:**
@@ -145,11 +129,9 @@ jobs:
 
             ### What's new
             See the Changelog tab inside the app for full release notes.
-          files: |
-            dist/*.dmg
-            dist/*.exe
-            dist/*.AppImage
+          files: dist/*
           draft: false
           prerelease: ${{ contains(steps.ver.outputs.VERSION, 'beta') || contains(steps.ver.outputs.VERSION, 'alpha') }}
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
