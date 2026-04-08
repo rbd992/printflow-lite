@@ -19,7 +19,7 @@ const Icons = {
   queue:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>,
   customers: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   quotes:    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-  printer:   <svg width="15" height="15" viewBox="0 0 80 80" fill="none"><rect x="8" y="12" width="6" height="40" rx="3" fill="currentColor" opacity="0.5"/><rect x="66" y="12" width="6" height="40" rx="3" fill="currentColor" opacity="0.5"/><rect x="8" y="10" width="64" height="8" rx="4" fill="currentColor" opacity="0.65"/><rect x="31" y="12" width="18" height="11" rx="3" fill="currentColor"/><path d="M37 23 L40 30 L43 23 Z" fill="currentColor"/><rect x="27" y="48" width="26" height="5" rx="2" fill="currentColor" opacity="0.7"/><rect x="16" y="53" width="48" height="4" rx="2" fill="currentColor" opacity="0.4"/><rect x="10" y="57" width="60" height="8" rx="3" fill="currentColor" opacity="0.6"/></svg>,
+  printer:   <svg width="15" height="15" viewBox="0 0 80 80" fill="none"><rect x="8" y="14" width="6" height="38" rx="3" fill="currentColor" opacity="0.45"/><rect x="66" y="14" width="6" height="38" rx="3" fill="currentColor" opacity="0.45"/><rect x="8" y="12" width="64" height="9" rx="4" fill="currentColor" opacity="0.7"/><rect x="30" y="14" width="20" height="12" rx="3" fill="currentColor"/><path d="M36 26 L40 35 L44 26 Z" fill="currentColor"/><rect x="26" y="49" width="28" height="5" rx="2.5" fill="currentColor" opacity="0.65"/><rect x="28" y="44" width="24" height="6" rx="2.5" fill="currentColor" opacity="0.5"/><rect x="30" y="40" width="20" height="5" rx="2" fill="currentColor" opacity="0.35"/><rect x="14" y="54" width="52" height="4" rx="2" fill="currentColor" opacity="0.4"/><rect x="10" y="58" width="60" height="9" rx="3" fill="currentColor" opacity="0.65"/></svg>,
   filament:  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>,
   parts:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
   shipping:  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
@@ -123,10 +123,11 @@ export default function AppShell({ theme, onThemeChange }) {
         <div style={{ padding: '0 14px 12px', borderBottom: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#0071E3,#0056B3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,113,227,0.35)' }}>
             {/* Geometric F lettermark */}
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <rect x="3" y="2" width="2.5" height="14" rx="1" fill="white"/>
-              <rect x="3" y="2" width="10" height="2.5" rx="1" fill="white"/>
-              <rect x="3" y="7.5" width="7" height="2.5" rx="1" fill="white"/>
+            <svg width="18" height="18" viewBox="0 0 38 38" fill="none">
+              <rect x="10" y="8"  width="3.5" height="22" rx="1.75" fill="white" opacity="0.9"/>
+              <rect x="10" y="8"  width="16"  height="3.5" rx="1.75" fill="white" opacity="0.9"/>
+              <rect x="10" y="17" width="11"  height="3.5" rx="1.75" fill="white" opacity="0.9"/>
+              <circle cx="28" cy="29" r="3" fill="#30D158"/>
             </svg>
           </div>
           <div>
@@ -198,8 +199,11 @@ export default function AppShell({ theme, onThemeChange }) {
             </button>
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
-            <button className="btn btn-ghost btn-icon no-drag" onClick={toggleTheme} title="Toggle theme" style={{ padding: 4, fontSize: 13 }}>
-              {theme === 'dark' ? '☀' : '☾'}
+            <button className="btn btn-ghost btn-icon no-drag" onClick={toggleTheme} title="Toggle theme" style={{ padding: 4 }}>
+              {theme === 'dark'
+                ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              }
             </button>
             <button className="btn btn-ghost btn-icon no-drag" onClick={async () => { await logout(); navigate('/login'); }} title="Sign out" style={{ padding: 4 }}>
               {Icons.logout}
