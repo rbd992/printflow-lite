@@ -132,6 +132,6 @@ jobs:
           files: dist/*
           draft: false
           prerelease: ${{ contains(steps.ver.outputs.VERSION, 'beta') || contains(steps.ver.outputs.VERSION, 'alpha') }}
-          make_latest: true
+          make_latest: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
