@@ -365,7 +365,7 @@ export default function SetupWizard({ onComplete }) {
         <Field label="Appearance">
           <div style={{ display: 'flex', gap: 8 }}>
             {[['dark','Dark'],['light','Light'],['system','System']].map(([v, l]) => (
-              <button key={v} onClick={() => setTheme(v)} style={{
+              <button key={v} onClick={() => { setTheme(v); document.documentElement.setAttribute('data-theme', v); window.printflow?.setTheme?.(v); }} style={{
                 flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
                 background: theme === v ? 'rgba(0,113,227,0.15)' : 'rgba(255,255,255,0.04)',
                 border: theme === v ? '0.5px solid rgba(0,113,227,0.4)' : '0.5px solid rgba(255,255,255,0.08)',
