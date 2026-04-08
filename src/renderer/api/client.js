@@ -10,7 +10,7 @@ export const api = axios.create({ baseURL: serverUrl, timeout: 15000 });
 api.interceptors.request.use(async config => {
   config.baseURL = serverUrl;
   try {
-    const token = await window.printflow.getToken();
+          const token = await window.printflow?.getToken?.();
     if (token) config.headers.Authorization = `Bearer ${token}`;
   } catch {}
   return config;
