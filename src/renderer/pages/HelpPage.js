@@ -1,696 +1,883 @@
-import React, { useState } from 'react';
+﻿// ──────────────────────────────────────────────────────────────────────────────
+// PrintFlow Lite v0.1.4 — HelpPage.js
+// In-App Help Center & Setup Guide
+// Comprehensive user documentation for all features
+// Place in: src/renderer/pages/HelpPage.js
+// ──────────────────────────────────────────────────────────────────────────────
 
-const SECTIONS = [
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const APP_VERSION = '0.1.4-beta';
+
+// ── Help Content Database ───────────────────────────────────────────────────
+
+const HELP_SECTIONS = [
+  // ─ Getting Started ─
   {
     id: 'getting-started',
     title: 'Getting Started',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+    icon: '🚀',
     articles: [
       {
-        title: 'Welcome to PrintFlow Lite',
-        content: `PrintFlow Lite is a complete 3D print business management suite that runs entirely on your computer. No subscription, no cloud, no internet required after installation.
-
-Your data is stored locally in a SQLite database, giving you full control over your information. The app bundles its own server which starts automatically when you launch it.
-
-**What you can do with PrintFlow Lite:**
-• Manage orders from intake to delivery
-• Track filament inventory across 12+ brands
-• Monitor and control your 3D printers in real time
-• Manage customers and generate quotes
-• Track income and expenses with HST/tax support
-• Manage parts and maintenance schedules
-• Connect your Shopify and Etsy stores for order sync
-• Post to Facebook, Instagram, TikTok, and YouTube
-• View production analytics and financial reports
-
-**System Requirements:**
-• macOS 12+ (Apple Silicon or Intel)
-• Windows 10/11 (64-bit)
-• Ubuntu 22.04+ or similar Linux
-• 4GB RAM minimum, 8GB recommended
-• 500MB disk space`
-      },
-      {
+        id: 'first-launch',
         title: 'First Launch & Setup Wizard',
-        content: `When you launch PrintFlow Lite for the first time, the setup wizard will guide you through initial configuration.
+        content: `When you first open PrintFlow Lite, the setup wizard walks you through everything in under 2 minutes.
 
-**Step 1 — Welcome**
-Read the overview and click Get Started.
+**Step 1 — Business Info**
+Enter your business name, address, and contact details. This information appears on quotes, invoices, and shipping labels. You can change it later in Settings.
 
-**Step 2 — Business Info**
-Enter your business name and contact email. This information appears on quotes and invoices. You can change it later in Settings → General.
+**Step 2 — Create Owner Account**
+Create your login credentials. The owner account has full access to everything including user management and finances. Choose a strong password — all data is stored locally on your machine.
 
-**Step 3 — Create Your Account**
-Create the Owner account. This is your primary login. Choose a strong password (8+ characters). You can add more team members later in the Users section.
+**Step 3 — Add Your First Printer**
+Enter your printer's name, brand, and model. If your printer has a network connection (WiFi/Ethernet), enter its IP address to enable remote monitoring and camera feeds.
 
-**Step 4 — Preferences**
-Select your currency and preferred theme. These can be changed at any time in Settings.
+**Step 4 — Currency & Tax**
+Select your currency (CAD default) and enter your HST/GST rate. PrintFlow calculates tax automatically on orders, quotes, and invoices.
 
-**Waiting for server…**
-After clicking Finish Setup, the app starts the local server and creates your database. This normally takes 2–5 seconds. If it takes longer, see the Troubleshooting section.
-
-**After setup:**
-You'll be logged in automatically and taken to the Dashboard. The setup wizard will not appear again unless you reset the app data.`
+**Step 5 — Done!**
+You're ready to go. Start by adding an order or exploring the dashboard.`,
       },
       {
-        title: 'Navigating PrintFlow',
-        content: `**Sidebar Navigation**
-The sidebar on the left contains all sections:
+        id: 'overview',
+        title: 'App Overview & Navigation',
+        content: `PrintFlow Lite is organized into these main sections, accessible from the sidebar:
 
-• **Dashboard** — Overview of orders, revenue, and printer status
-• **Orders** — All customer orders with status tracking
-• **Job Queue** — Kanban-style print queue
-• **Print History** — Completed print log
-• **Customers** — Customer database (auto-built from orders)
-• **Quotes** — Quote and invoice builder
-• **Printers** — Registered printers and live status
-• **Filament** — Spool inventory and usage tracking
-• **Parts** — Spare parts and consumables
-• **Finance** — Income, expenses, and profit tracking
-• **Shipping** — Shipping and tracking
-• **Marketing** — Social media and platform connections
-• **Settings** — All configuration
-• **Users** — Team management (Owner only)
-• **Help** — This documentation
+**Dashboard** — Overview of your business: active orders, revenue chart, printer status, and recent activity.
 
-**Theme Toggle**
-Click the sun/moon icon in the bottom-left of the sidebar to switch between dark and light mode.
+**Orders** — Create, manage, and track customer orders through the full lifecycle from New → Queued → Printing → QC → Packed → Shipped → Paid.
 
-**Update Indicator**
-When a new version is available, a blue banner appears above the user info in the sidebar.`
+**Job Queue** — Kanban-style board showing what's queued, printing, done, or failed. Drag cards between columns.
+
+**Customers** — Auto-built from order history. View order history, contact info, and lifetime value per customer.
+
+**Printers** — Manage your printers, view live status, camera feeds, temperature readings, and maintenance schedules.
+
+**Filament** — Track your filament inventory across 12+ brands with costs, weights, and colour tracking.
+
+**Maintenance** — Scheduled maintenance tasks for 35+ procedures across all major printer brands.
+
+**Finance** — Income/expense tracking with HST, 7-day revenue chart, and financial summaries.
+
+**Quotes & Invoices** — Generate professional quotes and invoices with automatic price calculations.
+
+**Shipping** — Configure carriers, get rate quotes, create shipments, and print labels.
+
+**Settings** — Company info, users, theme, carriers, cloud connections, and more.
+
+**Help** — You're here! Setup guides, troubleshooting, and keyboard shortcuts.`,
       },
-    ]
+      {
+        id: 'system-requirements',
+        title: 'System Requirements',
+        content: `**Minimum Requirements:**
+- macOS 11 (Big Sur) or later, Windows 10 or later, or Linux (Ubuntu 20.04+)
+- 4 GB RAM
+- 500 MB disk space
+- No internet required after initial install (except for update checks and shipping APIs)
+
+**Recommended for Camera Feeds:**
+- ffmpeg installed (for Bambu Lab RTSP cameras)
+- macOS: \`brew install ffmpeg\`
+- Windows: Download from ffmpeg.org and add to PATH
+- Linux: \`sudo apt install ffmpeg\`
+
+**Recommended for Label Printing:**
+- Thermal label printer (Dymo, Rollo, Zebra, or Brother QL series)
+- Standard 4×6" label stock for shipping labels
+- Set your thermal printer as default for fastest label printing`,
+      },
+    ],
   },
+
+  // ─ Orders ─
   {
     id: 'orders',
-    title: 'Orders',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/><path d="M12 12H3"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>,
+    title: 'Orders & Customers',
+    icon: '📋',
     articles: [
       {
-        title: 'Order Status Flow',
-        content: `Every order moves through a lifecycle of statuses:
+        id: 'create-order',
+        title: 'Creating an Order',
+        content: `**To create a new order:**
 
-**New** → Order received, not yet confirmed
-**Quoted** → Quote sent to customer, awaiting approval
-**Confirmed** → Customer approved, ready to schedule
-**Queued** → Added to the print queue
-**Printing** → Currently being printed
-**Printed** → Print complete, awaiting post-processing
-**Post-Processing** → Sanding, painting, assembly, etc.
-**QC** → Quality check in progress
-**Packed** → Packaged and ready to ship
-**Shipped** → Shipped with tracking
-**Delivered** → Confirmed delivered
-**Paid** → Payment received
-**Cancelled** → Order cancelled
+1. Click "New Order" on the Orders page or Dashboard
+2. Enter the customer name (or select existing) and contact info
+3. Add line items — each item has a name, quantity, material cost, labour time, and markup percentage
+4. The price calculator shows per-item and total costs with HST
+5. Add any notes (print instructions, special requests, etc.)
+6. Click "Create Order" — it starts in the "New" status
 
-**Moving orders through statuses:**
-Click on any order to open it, then use the status dropdown to advance it. You can also bulk-update statuses from the order list.
+**Price Calculator Fields:**
+- Material Cost: Cost of filament used (grams × price per gram)
+- Labour: Your hourly rate × estimated hours
+- Markup: Percentage added on top (default based on Settings)
+- HST: Automatically calculated from your tax rate in Settings
 
-**Auto-tracking:**
-When you add a tracking number and change status to Shipped, the order is automatically marked for delivery monitoring.`
+**Tip:** The more detail you put in order notes, the easier it is to reference during printing and QC.`,
       },
       {
-        title: 'Creating Orders',
-        content: `**From the Orders page:**
-Click "+ New Order" to create a new order manually.
+        id: 'order-lifecycle',
+        title: 'Order Status Lifecycle',
+        content: `Orders flow through these statuses:
 
-**Required fields:**
-• Customer name
-• Description of what they want printed
-• Price
+**New** → Order just created, not yet assigned to a print job
+**Queued** → Ready to print, appears on the Job Queue board
+**Printing** → Currently being printed
+**QC** → Print complete, undergoing quality check
+**Packed** → Passed QC, packaged and ready to ship
+**Shipped** → Shipped to customer (tracking number added)
+**Paid** → Payment received, order complete
 
-**Optional but recommended:**
-• Customer email — enables sending quotes and updates
-• Platform — where the order came from (Direct, Etsy, Shopify, etc.)
-• Filament — which spool will be used (tracks usage)
-• Due date — shows on the queue board
-• Notes — internal notes about the order
+Click the status badge on any order to advance it to the next stage. You can also move orders backward if needed (e.g., failed QC goes back to Queued).
 
-**From Shopify/Etsy:**
-If you have Shopify or Etsy connected in Settings → Integrations, new orders are imported automatically based on your sync settings.
-
-**Price Calculator:**
-The built-in calculator helps you price jobs based on:
-• Material cost (from filament spool price)
-• Print time estimate
-• Markup percentage
-• Shipping`
+**Quick Actions on Order Cards:**
+- Click the tracking field to add a tracking number
+- Click the carrier dropdown to select the shipping carrier
+- Use the "Ship" button to open the shipping workflow (rate quotes → label → done)`,
       },
-    ]
+      {
+        id: 'csv-export',
+        title: 'Exporting Orders (CSV)',
+        content: `To export your orders as a spreadsheet:
+
+1. Go to Orders page
+2. Click the "Export" button in the top right
+3. Choose your date range (or export all)
+4. A .csv file downloads automatically
+
+The CSV includes all order fields: order number, customer, items, totals, status, dates, tracking, and notes. Open it in Excel, Google Sheets, or any spreadsheet app.`,
+      },
+    ],
   },
+
+  // ─ Shipping ─
+  {
+    id: 'shipping',
+    title: 'Shipping & Labels',
+    icon: '📬',
+    articles: [
+      {
+        id: 'shipping-overview',
+        title: 'Shipping Overview',
+        content: `PrintFlow Lite supports five major carriers:
+
+🍁 **Canada Post** — Expedited, Xpresspost, Priority, Regular Parcel, International
+📦 **FedEx** — Ground, Express Saver, 2Day, Overnight, International
+🟤 **UPS** — Ground, 2nd Day, Next Day, Standard (Canada), Worldwide
+🔴 **Purolator** — Express, Ground, Express 9AM/12PM, US, International
+🟡 **DHL Express** — Express Worldwide, Economy Select, Express 9:00/12:00
+
+Each carrier lets you:
+- Compare shipping rates across services
+- Create shipments and generate labels (PDF or ZPL for thermal printers)
+- Track packages in real-time
+- Validate recipient addresses before shipping
+
+You can configure multiple carriers and PrintFlow will compare rates across all of them to find the best price.`,
+      },
+      {
+        id: 'carrier-setup-canadapost',
+        title: 'Setting Up Canada Post',
+        content: `**What You Need:**
+- A Canada Post business/commercial account
+- API credentials from the Developer Program
+
+**Step-by-Step:**
+
+1. Go to **canadapost-postescanada.ca** and sign in to your business account
+2. Navigate to **Developer Program** → **API Keys** (or go directly to canadapost-postescanada.ca/information/app/drc/registered)
+3. Click **Create New API Key** — you'll get an API Username and API Password
+4. Find your **Customer Number** on your Canada Post account dashboard (usually 7+ digits)
+5. (Optional) If you have a contract account, note your **Contract Number** for discounted rates
+6. In PrintFlow, go to **Settings** → **Shipping** → **Add Carrier** → **Canada Post**
+7. Paste your API Username, API Password, and Customer Number
+8. Enter your return/sender address (used on all labels)
+9. Toggle **Sandbox Mode** off when you're ready for live shipping
+10. Click **Test Connection** to verify
+
+**Tip:** Start with sandbox mode enabled to test label generation without creating real shipments. Canada Post sandbox uses the same credentials but doesn't charge your account.`,
+      },
+      {
+        id: 'carrier-setup-fedex',
+        title: 'Setting Up FedEx',
+        content: `**What You Need:**
+- A FedEx business account
+- FedEx Developer Portal credentials
+
+**Step-by-Step:**
+
+1. Go to **developer.fedex.com** and create a developer account (use your FedEx.com business login)
+2. Click **Create a Project** and name it "PrintFlow"
+3. Select these APIs: **Ship API, Rate API, Track API, Address Validation API**
+4. After approval, copy your **API Key (Client ID)** and **Secret Key (Client Secret)**
+5. Find your **FedEx Account Number** (9 digits) from your FedEx business account
+6. In PrintFlow, go to **Settings** → **Shipping** → **Add Carrier** → **FedEx**
+7. Paste Client ID, Client Secret, and Account Number
+8. Enter your return/sender address
+9. Use **Sandbox Mode** for testing — the sandbox URL is used automatically
+10. Click **Test Connection**
+
+**Note:** FedEx developer accounts may take 24-48 hours for full API approval. Sandbox access is usually immediate.`,
+      },
+      {
+        id: 'carrier-setup-ups',
+        title: 'Setting Up UPS',
+        content: `**What You Need:**
+- A UPS business account at ups.com
+- UPS Developer Portal access
+
+**Step-by-Step:**
+
+1. Go to **developer.ups.com** and sign in with your UPS.com account
+2. Navigate to **My Apps** → **Create New App**
+3. Select: **Rating API, Shipping API, Tracking API, Address Validation API**
+4. Copy your **Client ID** and **Client Secret**
+5. Find your **UPS Account Number** (6 alphanumeric characters, e.g., A1B2C3) from your UPS billing account
+6. In PrintFlow, go to **Settings** → **Shipping** → **Add Carrier** → **UPS**
+7. Paste Client ID, Client Secret, and Account Number
+8. Enter your return/sender address
+9. Toggle sandbox for testing
+10. Click **Test Connection**
+
+**Important for Canadian Shippers:** UPS Standard (service code 11) is the most cost-effective for domestic Canadian shipments. For US-bound, UPS Ground is available from Canada.`,
+      },
+      {
+        id: 'carrier-setup-purolator',
+        title: 'Setting Up Purolator',
+        content: `**What You Need:**
+- A Purolator business/commercial account
+- E-Ship API credentials (obtained from Purolator directly)
+
+**Step-by-Step:**
+
+1. Call **Purolator E-Ship Solutions** at **1-888-SHIP-123** or email **eship@purolator.com**
+2. Request API access — mention you're integrating with shipping software
+3. Purolator will provide:
+   - An **Activation Key** (UUID format)
+   - A **Password** for API authentication
+   - Your **Billing Account Number**
+4. For testing, ask for **sandbox credentials** separately
+5. In PrintFlow, go to **Settings** → **Shipping** → **Add Carrier** → **Purolator**
+6. Enter Activation Key, Password, and Billing Account Number
+7. Enter your return/sender address
+8. Enable sandbox mode for initial testing
+9. Click **Test Connection**
+
+**Note:** Purolator API access typically requires a brief review process. Allow 3-5 business days for approval. Purolator is Canada-focused and an excellent choice for domestic and US-bound shipments.`,
+      },
+      {
+        id: 'carrier-setup-dhl',
+        title: 'Setting Up DHL Express',
+        content: `**What You Need:**
+- A DHL Express account
+- MyDHL API credentials
+
+**Step-by-Step:**
+
+1. Go to **developer.dhl.com** and register for an account
+2. Navigate to **MyDHL API** and request access
+3. You'll receive **API Username** and **API Password** via email (may take 1-2 days)
+4. Find your **DHL Account Number** (typically 9 digits) from your DHL Express account
+5. In PrintFlow, go to **Settings** → **Shipping** → **Add Carrier** → **DHL Express**
+6. Paste API Username, API Password, and Account Number
+7. Enter your return/sender address
+8. Enable sandbox for testing (uses the test endpoint automatically)
+9. Click **Test Connection**
+
+**For International Shipments:** DHL is the strongest choice for overseas packages. Customs documentation is generated automatically when shipping internationally. Ensure your DHL account has export privileges enabled.`,
+      },
+      {
+        id: 'create-shipment',
+        title: 'Creating a Shipment & Printing Labels',
+        content: `**From an Order:**
+
+1. Open any order in "Packed" status
+2. Click the **Ship** button
+3. The shipping panel opens with the customer's address pre-filled
+4. Verify the recipient address (click "Validate" to check with the carrier)
+5. Enter or confirm the package dimensions and weight
+6. Click **Get Rates** — rates from all configured carriers appear sorted by price
+7. Select the rate/service you want
+8. Click **Create Shipment** — the label is generated
+9. Click **Print Label** to send it to your printer
+10. The tracking number is automatically added to the order
+
+**Label Printing Tips:**
+- For thermal printers (Dymo/Rollo/Zebra): Select 4×6 PDF or ZPL format
+- For standard printers: Select Letter PDF format
+- Labels are saved locally and can be reprinted anytime from the shipment record
+- ZPL format sends raw commands to Zebra-compatible thermal printers for fastest printing
+
+**Multi-Carrier Rate Comparison:**
+When you click "Get Rates," PrintFlow queries all enabled carriers simultaneously and displays every available service option sorted by price. This makes it easy to find the cheapest or fastest option at a glance.`,
+      },
+      {
+        id: 'tracking',
+        title: 'Package Tracking',
+        content: `**Automatic Tracking:**
+When you create a shipment through PrintFlow, the tracking number is automatically saved and linked to the order.
+
+**Manual Tracking:**
+You can also enter a tracking number manually on any order — just click the tracking field on the order card.
+
+**Checking Status:**
+1. Open an order with a tracking number
+2. Click "Track" to fetch the latest status from the carrier
+3. Tracking events (scanned, in transit, delivered, etc.) are displayed with timestamps and locations
+
+**Tip:** The order status automatically updates to "Shipped" when a tracking number is added, and you can manually mark it "Delivered" / "Paid" once confirmed.`,
+      },
+    ],
+  },
+
+  // ─ Printers & Cameras ─
   {
     id: 'printers',
-    title: 'Printer Connections',
-    icon: <svg width="16" height="16" viewBox="0 0 64 64" fill="none"><rect x="6" y="10" width="5" height="36" rx="2.5" fill="currentColor" opacity="0.35"/><rect x="53" y="10" width="5" height="36" rx="2.5" fill="currentColor" opacity="0.35"/><rect x="6" y="10" width="52" height="7" rx="3.5" fill="currentColor" opacity="0.6"/><rect x="22" y="10" width="20" height="11" rx="3" fill="currentColor"/><path d="M29 21 L32 29 L35 21 Z" fill="currentColor"/><rect x="20" y="42" width="24" height="4.5" rx="2" fill="currentColor" opacity="0.55"/><rect x="7" y="50" width="50" height="7" rx="3.5" fill="currentColor" opacity="0.6"/></svg>,
+    title: 'Printers & Cameras',
+    icon: '🖨️',
     articles: [
       {
-        title: 'Bambu Lab Setup',
-        content: `Bambu Lab printers connect via MQTT over your local network. This is the most feature-rich integration.
+        id: 'add-printer',
+        title: 'Adding a Printer',
+        content: `PrintFlow supports any 3D printer. For network-connected printers, you get live status, temperature monitoring, and camera feeds.
 
-**Step 1 — Find your credentials on the printer:**
-On the touchscreen, go to: Settings → Network
-Note down:
-• IP Address
-• Access Code (8-character code)
-• Serial Number
+**To add a printer:**
 
-**Step 2 — Optional: Enable LAN-only mode**
-In the same Network menu, you can enable LAN-only mode. This prevents the printer from connecting to Bambu Cloud and gives you direct control. Recommended for privacy.
+1. Go to **Printers** → **Add Printer**
+2. Enter a name and select the brand/firmware:
+   - **OctoPrint** — Raspberry Pi running OctoPrint
+   - **Klipper / Moonraker** — Klipper firmware with Moonraker API
+   - **Bambu Lab** — X1C, P1S, P1P, A1 series
+   - **Prusa Connect** — MK4, MK3.9, XL, Mini
+   - **Creality** — K1, K1 Max, Ender series with WiFi
+   - **Duet3D / RRF** — Duet boards with RepRapFirmware
+   - **Repetier Server** — Multi-printer Repetier setup
+3. Enter the printer's IP address and port
+4. Enter the API key / access code (see brand-specific guides below)
+5. Enable the camera if your printer has one
+6. Click **Save** — PrintFlow begins monitoring
 
-**Step 3 — Enter in PrintFlow:**
-Settings → Printer Connections → Bambu Lab
-Enter the IP, Access Code, and Serial Number.
-Toggle "Enable Bambu integration" and Save.
-
-**What you get:**
-• Real-time print progress and layer count
-• Nozzle, bed, and chamber temperatures
-• AMS filament slot status and which slot is active
-• Print time remaining
-• Error and warning notifications
-• Camera feed (RTSPS stream — requires Bambu viewer or VLC)
-
-**Supported models:** X1C, X1E, P1S, P1P, A1, A1 Mini`
+**No Network? No Problem:**
+You can add any printer without network details. It simply won't have remote status or camera features — you'll track jobs manually through the Job Queue.`,
       },
       {
-        title: 'Prusa Setup (PrusaLink)',
-        content: `Prusa MK4, MK3.9, and XL connect via PrusaLink — a local HTTP API.
+        id: 'printer-api-keys',
+        title: 'Finding Your Printer API Key',
+        content: `**OctoPrint:**
+Open OctoPrint in your browser → Settings (wrench icon) → API → Copy the "API Key"
 
-**Step 1 — Enable PrusaLink on your Prusa:**
-• Go to: Settings → Network → PrusaLink
-• Enable PrusaLink
-• Note the **API Key** shown on screen
+**Klipper / Moonraker:**
+Usually no API key needed if on the same network. If auth is enabled: check ~/printer_data/config/moonraker.conf for the [authorization] section.
 
-**Step 2 — Find your printer IP:**
-Settings → Network → IP Address
+**Bambu Lab:**
+Open Bambu Studio → Device tab → click your printer → LAN Only mode → note the "Access Code" and "Serial Number" shown on the printer screen under Settings → Network → LAN-only.
 
-**Step 3 — Enter in PrintFlow:**
-Settings → Printer Connections → Prusa
-Enter IP address and API Key.
-Toggle "Enable Prusa integration" and Save.
+**Prusa Connect:**
+Login to connect.prusa3d.com → select your printer → Settings → API Key. Or on PrusaLink: access the printer's IP in a browser → Settings → generate an API key.
 
-**Older models (MK3S, MK2S):**
-Use OctoPrint integration instead. Install OctoPrint on a Raspberry Pi connected to your printer via USB.
+**Creality:**
+For K1/K1 Max: ensure the printer is on WiFi, find its IP in the printer's network settings. The local API doesn't require authentication on most models.
 
-**PrusaConnect (Cloud):**
-Prusa's cloud service is separate from PrusaLink. PrintFlow uses PrusaLink (local API) for direct connection without cloud dependency.`
+**Duet3D:**
+No API key needed — just the printer's IP. If a password is set, enter it in PrintFlow (default is usually empty or "reprap").
+
+**Repetier Server:**
+Open Repetier Server in your browser → Global Settings → API Keys → copy or create a key.`,
       },
       {
-        title: 'Klipper / Moonraker Setup',
-        content: `Klipper works with any printer that has the Klipper firmware installed. Moonraker is required as the API layer.
+        id: 'camera-setup',
+        title: 'Camera Feed Setup',
+        content: `**Automatic Camera Detection:**
+When you add a printer with a known brand, PrintFlow automatically configures the camera URL for that brand. Most setups work without any extra steps.
 
-**Prerequisites:**
-• Klipper installed on a Raspberry Pi or similar SBC
-• Moonraker installed and running (usually installed alongside Klipper via KIAUH)
-• Mainsail, Fluidd, or similar UI (optional but recommended for setup)
+**Manual Camera Configuration:**
+If auto-detection doesn't work, you can enter custom camera URLs in the printer's settings:
+- **MJPEG Stream URL** — for continuous video streams
+- **Snapshot URL** — for periodic image refresh
+- **WebRTC Signal URL** — for Moonraker camera-streamer
+- **RTSP URL** — for Bambu Lab and IP cameras
 
-**Step 1 — Find your Moonraker URL:**
-It's typically: http://[your-pi-ip]:7125
-Or: http://mainsailos.local:7125
+**Camera Protocols by Brand:**
+- OctoPrint: MJPEG (usually http://[ip]/webcam/?action=stream)
+- Klipper: MJPEG, WebRTC, or HLS (via camera-streamer)
+- Bambu Lab: RTSP (requires ffmpeg installed — see System Requirements)
+- Prusa: Snapshot polling (http://[ip]/api/v1/cameras/snap)
+- Creality: MJPEG
+- Duet/Repetier: MJPEG
 
-**Step 2 — Optional: Get API Key:**
-In Moonraker config (/home/pi/printer_data/config/moonraker.conf):
-Look for [authorization] section and your API key.
-If [authorization] is not configured, you don't need an API key.
-
-**Step 3 — Enter in PrintFlow:**
-Settings → Printer Connections → Klipper/Moonraker
-Enter Moonraker URL and API Key (if required).
-Toggle enable and Save.
-
-**What you get:**
-• Full print status from Klipper
-• All temperature readings (hotend, bed, chamber, MCU)
-• Print progress and time remaining
-• GCode macro list
-• Emergency stop button
-• Camera feed via Crowsnest or mjpeg-streamer
-
-**Compatible printers:** Voron V2.4, Voron Trident, Voron 0, Ratrig V-Core, custom Ender 3 conversions, and any printer running Klipper.`
+**Troubleshooting Cameras:**
+- Ensure the camera URL is accessible from your computer's browser first
+- For Bambu Lab, ffmpeg must be installed for RTSP stream conversion
+- Try the "Snapshot" protocol if MJPEG streaming has issues
+- Check that your firewall isn't blocking the camera port`,
       },
-      {
-        title: 'OctoPrint Setup',
-        content: `OctoPrint is a universal 3D printer interface that works with virtually any printer via USB serial connection.
-
-**When to use OctoPrint:**
-• Older Prusa printers (MK3S, MK2, MK1)
-• Older Creality/Ender printers without network capability
-• Any printer that doesn't have a native network API
-• When you want a universal solution for mixed printer fleet
-
-**Step 1 — Install OctoPrint:**
-The easiest method is OctoPi — a pre-built Raspberry Pi image with OctoPrint.
-Download from: https://octoprint.org/download/
-
-**Step 2 — Get your API Key:**
-In OctoPrint web interface: Settings (wrench icon) → API → Global API Key → Copy
-
-**Step 3 — Find OctoPrint URL:**
-Usually: http://octopi.local or http://[raspberry-pi-ip]:5000
-
-**Step 4 — Enter in PrintFlow:**
-Settings → Printer Connections → OctoPrint
-Enter URL and API Key.
-Toggle enable and Save.`
-      },
-    ]
+    ],
   },
+
+  // ─ Production ─
   {
-    id: 'integrations',
-    title: 'Social & E-Commerce',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="16" y="3" width="6" height="6" rx="1"/><rect x="16" y="15" width="6" height="6" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/><path d="M8 6h8M8 18h8M5 9v6M19 9v6"/></svg>,
+    id: 'production',
+    title: 'Production & Job Queue',
+    icon: '⚙️',
     articles: [
       {
-        title: 'Facebook & Instagram Setup',
-        content: `Facebook and Instagram use the same developer app.
+        id: 'job-queue',
+        title: 'Using the Job Queue',
+        content: `The Job Queue is a kanban board with four columns: **Queued**, **Printing**, **Done**, **Failed**.
 
-**Step 1 — Create a Facebook Developer Account:**
-1. Go to https://developers.facebook.com
-2. Click "My Apps" → "Create App"
-3. Choose "Business" as the app type
-4. Fill in app name and contact email
+**Adding Jobs:**
+When an order status changes to "Queued," its print jobs appear in the Queued column. You can also add standalone jobs.
 
-**Step 2 — Add the required products:**
-In your app dashboard, add:
-• Pages API (for posting to your Facebook Page)
-• Instagram Graph API (for Instagram posts)
+**Moving Jobs:**
+Drag cards between columns or click the arrow buttons. When a job moves to "Done," the linked order advances to "QC" status automatically.
 
-**Step 3 — Configure permissions:**
-In App Review → Permissions, request:
-• pages_manage_posts
-• pages_read_engagement
-• pages_manage_metadata
-• instagram_basic
-• instagram_content_publish
+**Failed Jobs:**
+If a print fails, move it to Failed with a note about why. You can then move it back to Queued to retry.
 
-**Step 4 — Generate a Page Access Token:**
-Use the Graph API Explorer (https://developers.facebook.com/tools/explorer/) to generate a long-lived Page Access Token.
-
-**Step 5 — Enter credentials in PrintFlow:**
-Settings → Integrations → Facebook
-Enter App ID, App Secret, Page ID, and Page Access Token.
-
-**Finding your Page ID:**
-Go to your Facebook Page → About → scroll to bottom for Page ID.
-
-**Instagram Account ID:**
-Use the Graph API Explorer: GET /me/accounts then find your Instagram Business Account.
-
-**Note:** Instagram posting requires a Business or Creator account linked to your Facebook Page.`
+**Print History:**
+All completed and failed jobs are logged in the Print History section, accessible from the Production menu.`,
       },
       {
-        title: 'Shopify Integration',
-        content: `The Shopify integration syncs orders bidirectionally between your Shopify store and PrintFlow.
+        id: 'filament-mgmt',
+        title: 'Filament Management',
+        content: `PrintFlow includes a multi-brand filament catalogue with 12+ brands pre-loaded: Bambu Lab, Prusament, Hatchbox, eSUN, Polymaker, Overture, Sunlu, Elegoo, Inland, MatterHackers, 3D Printing Canada, and Amazon Basics.
 
-**Step 1 — Create a Private App in Shopify:**
-1. Shopify Admin → Settings → Apps and sales channels
-2. Click "Develop apps" → "Create an app"
-3. Name it "PrintFlow Lite"
+**Adding Filament:**
+1. Go to Filament → Add Filament
+2. Select brand and material type (PLA, PETG, ABS, TPU, etc.)
+3. Enter the colour, weight, and cost
+4. The cost-per-gram is calculated automatically
 
-**Step 2 — Configure API scopes:**
-Under "Configuration" → "Admin API access scopes", enable:
-• read_orders, write_orders
-• read_products, write_products
-• read_inventory, write_inventory
-• read_customers
-• read_fulfillments, write_fulfillments
-• read_shipping
-
-**Step 3 — Install and get credentials:**
-Click "Install app" then copy:
-• Admin API access token (starts with shpat_)
-• API key
-• API secret key
-
-**Step 4 — Enter in PrintFlow:**
-Settings → Integrations → Shopify
-Enter your store URL (yourstore.myshopify.com) and the Admin API access token.
-
-**Order Sync:**
-With "Auto-import new orders" enabled, new Shopify orders appear in PrintFlow automatically. When you mark an order as Shipped in PrintFlow with a tracking number, the fulfillment is updated in Shopify.
-
-**Product sync:**
-PrintFlow can read your Shopify product listings to pre-fill order descriptions.`
+**Tracking Usage:**
+When calculating order costs, reference your filament cost-per-gram for accurate material pricing.`,
       },
       {
-        title: 'Etsy Integration',
-        content: `The Etsy integration uses the Etsy API v3 to sync orders and listings.
+        id: 'maintenance',
+        title: 'Printer Maintenance',
+        content: `PrintFlow tracks 35+ maintenance tasks across generic FDM, Bambu Lab, Prusa, Creality, and Voron printers.
 
-**Step 1 — Register as an Etsy Developer:**
-1. Go to https://www.etsy.com/developers
-2. Sign in with your Etsy seller account
-3. Click "Register as a developer"
+**Tasks include:**
+- Nozzle cleaning and replacement
+- Bed leveling and PEI sheet cleaning
+- Belt tensioning
+- Lubrication (rails, lead screws)
+- Firmware updates
+- Filter replacements (carbon, HEPA)
+- Hotend rebuilds
 
-**Step 2 — Create an app:**
-Click "Create a new app" and fill in:
-• App name: PrintFlow Lite
-• Description: 3D print shop management
-• Callback URL: http://localhost:3001/api/etsy/callback
-
-**Step 3 — Request scopes:**
-Under "Requested Permissions", select:
-• listings_r, listings_w
-• transactions_r, transactions_w
-• billing_r
-• profile_r, email_r
-
-**Step 4 — OAuth flow:**
-Etsy uses OAuth 2.0 with PKCE. After entering your API key and secret in PrintFlow's settings, click the authorization link to complete the OAuth flow. Your browser will open Etsy's login page.
-
-**Step 5 — Enter in PrintFlow:**
-Settings → Integrations → Etsy
-Enter Keystring (API Key) and Shared Secret.
-
-**What syncs:**
-• New Etsy orders → PrintFlow orders
-• Custom orders and convos
-• When marked shipped in PrintFlow → Etsy tracking updated
-• Active listings → available in order creation`
+Each task has a recommended interval. PrintFlow reminds you when maintenance is due based on print hours or calendar days.`,
       },
-    ]
+    ],
   },
+
+  // ─ Business / Finance ─
   {
-    id: 'filament',
-    title: 'Filament & Materials',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>,
+    id: 'finance',
+    title: 'Finance & Invoicing',
+    icon: '💰',
     articles: [
       {
-        title: 'Managing Filament Spools',
-        content: `PrintFlow tracks your filament inventory so you always know what you have and when to reorder.
+        id: 'income-expenses',
+        title: 'Income & Expense Tracking',
+        content: `**Recording Income:**
+Income is automatically recorded when orders are marked as "Paid." You can also add manual income entries for non-order revenue.
 
-**Adding a spool:**
-1. Go to Filament section
-2. Click "+ Add Spool"
-3. Select brand, material, and color
-4. Enter full weight (typically 1000g) and current remaining weight
-5. Set cost — used for job costing in orders
-6. Set reorder threshold — PrintFlow alerts you when remaining weight drops below this
+**Recording Expenses:**
+Go to Finance → Add Expense. Common categories: filament, printer parts, shipping supplies, electricity, software subscriptions.
 
-**Supported brands (12 built-in):**
-Bambu Lab, Prusament, Hatchbox, eSUN, Polymaker, Overture, Sunlu, Elegoo, Inland, MatterHackers, 3D Printing Canada, Amazon Basics
+**HST/Tax:**
+All amounts can include or exclude HST. PrintFlow tracks HST collected (on sales) and HST paid (on expenses) separately, making tax season easier.
 
-**Tracking usage:**
-When you create an order and select a filament spool, you can enter the estimated filament used in grams. This automatically deducts from the spool's remaining weight.
-
-**Reorder alerts:**
-When a spool drops below the reorder threshold, it appears highlighted in the filament list and shows on the Dashboard.
-
-**Materials supported:**
-PLA, PETG, ABS, ASA, TPU, TPE, PC, Nylon, PA12-CF, PA-CF, PLA-CF, PETG-CF, PVA, HIPS, and custom.`
+**7-Day Revenue Chart:**
+The Dashboard and Finance page show a 7-day rolling revenue chart so you can spot trends at a glance.`,
       },
-    ]
+      {
+        id: 'quotes-invoices',
+        title: 'Quotes & Invoices',
+        content: `**Creating a Quote:**
+1. Go to Quotes → New Quote
+2. Add the customer and line items with pricing
+3. The quote shows material cost, labour, markup, and HST
+4. Export as PDF or send directly to the customer
+
+**Converting to Invoice:**
+Once a quote is accepted, convert it to an invoice with one click. The invoice inherits all line items and pricing.
+
+**Converting to Order:**
+An accepted quote can also be converted to an order, which then flows through the normal order lifecycle.`,
+      },
+    ],
   },
+
+  // ─ Cloud & Integrations ─
+  {
+    id: 'cloud',
+    title: 'Cloud Integrations',
+    icon: '☁️',
+    articles: [
+      {
+        id: 'cloud-overview',
+        title: 'Cloud Connections Overview',
+        content: `PrintFlow Lite runs entirely offline, but you can optionally connect cloud services for extra features:
+
+**Printer Clouds:**
+- Bambu Cloud — monitor your Bambu Lab printers remotely
+- Prusa Connect — manage Prusa printers from anywhere
+- Creality Cloud — access Creality's model library and remote printing
+- OctoPrint Anywhere / Obico — remote access with AI failure detection
+
+**File Storage:**
+- Google Drive — backup your database and sync G-code files
+- Dropbox — same as Google Drive, alternative storage
+
+**Setup:**
+Go to Settings → Cloud Integrations → select a provider and enter your credentials. Each provider has specific steps — see the individual guides.
+
+**Privacy Note:** Cloud connections are optional. Your core data always stays on your machine. Cloud features only sync what you explicitly configure.`,
+      },
+    ],
+  },
+
+  // ─ Users & Security ─
+  {
+    id: 'users',
+    title: 'Users & Roles',
+    icon: '👥',
+    articles: [
+      {
+        id: 'user-roles',
+        title: 'User Roles Explained',
+        content: `PrintFlow supports three roles:
+
+**Owner** — Full access to everything. Can manage users, view finances, change settings, and delete data. Created during setup.
+
+**Manager** — Can manage orders, printers, job queue, shipping, and customers. Cannot access user management or delete the database.
+
+**Operator** — Can view and update orders, use the job queue, and log print completions. Cannot access finances, settings, or user management.
+
+**Adding Users:**
+Go to Settings → Users → Add User. Enter a username, password, and select their role.
+
+**Tip:** For a one-person shop, you only need the Owner account. Add Manager/Operator accounts if you have employees or collaborators.`,
+      },
+    ],
+  },
+
+  // ─ Settings & Backup ─
+  {
+    id: 'settings',
+    title: 'Settings & Backup',
+    icon: '⚡',
+    articles: [
+      {
+        id: 'theme',
+        title: 'Light & Dark Mode',
+        content: `Go to Settings → Appearance → toggle between Light and Dark mode. The setting persists across sessions.`,
+      },
+      {
+        id: 'backup',
+        title: 'Backing Up Your Data',
+        content: `All PrintFlow Lite data is stored in a single SQLite file on your machine.
+
+**Manual Backup:**
+1. Go to Settings → Data → Backup
+2. Click "Create Backup" — a timestamped copy of your database is saved
+3. You can also find the database file at the path shown in Settings → Data
+
+**Cloud Backup:**
+If you've connected Google Drive or Dropbox, PrintFlow can automatically upload your database backup to the cloud. Enable this in Settings → Cloud → Auto-Backup.
+
+**Restoring from Backup:**
+1. Go to Settings → Data → Restore
+2. Select your backup file
+3. PrintFlow replaces the current database with the backup
+
+**Important:** Back up regularly, especially before app updates. Your data is your business!`,
+      },
+      {
+        id: 'updates',
+        title: 'Checking for Updates',
+        content: `PrintFlow checks for updates automatically when you open the app (requires internet).
+
+**Manual Check:**
+Go to Settings → About → Check for Updates.
+
+**How Updates Work:**
+- PrintFlow checks GitHub Releases for new versions
+- If an update is available, you'll see a notification with the version number and changelog
+- Updates are never auto-installed — you always choose when to update
+- Download the new version from the notification link and install it over the current version
+- Your data is preserved through updates (it's stored separately from the app)`,
+      },
+    ],
+  },
+
+  // ─ Troubleshooting ─
   {
     id: 'troubleshooting',
     title: 'Troubleshooting',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+    icon: '🔧',
     articles: [
       {
-        title: 'App Won\'t Start / Server Not Ready',
-        content: `**Symptoms:** Login screen shows "Starting server…" and never progresses.
+        id: 'common-issues',
+        title: 'Common Issues & Fixes',
+        content: `**"Cannot reach PrintFlow server"**
+The bundled Express server hasn't started yet. Wait a few seconds and try again. If it persists, restart the app.
 
-**Cause:** The bundled Express server failed to start.
+**macOS says the app is "damaged"**
+Run this in Terminal:
+\`xattr -cr "/Applications/PrintFlow Lite.app"\`
+This removes the macOS quarantine flag from the unsigned app.
 
-**Fix on Windows:**
-1. Open PowerShell and run:
-   Get-ChildItem "$env:LOCALAPPDATA\\Programs\\PrintFlow Lite\\resources\\server" | Select Name
-   
-2. If server files are there, run:
-   node "$env:LOCALAPPDATA\\Programs\\PrintFlow Lite\\resources\\server\\index.js"
-   
-3. Look for the error message. Common causes:
-   • Port 3001 already in use → close other apps using that port
-   • Missing node_modules → reinstall the app
-   • Permission error on logs folder → the app needs write access to AppData
+**Windows SmartScreen warning**
+Click "More info" → "Run anyway". This appears because the app isn't code-signed (yet). It's safe.
 
-**Fix on Mac:**
-Open Terminal and run:
-node "/Applications/PrintFlow Lite.app/Contents/Resources/server/index.js"
+**Printer not connecting**
+1. Verify the printer's IP address in your router or printer display
+2. Ensure your computer is on the same network as the printer
+3. Try accessing the printer's web interface in your browser first
+4. Check that the correct port is entered (default varies by brand)
+5. Verify the API key / access code is correct
 
-**If you see "EPERM mkdir logs":**
-This is a known issue in older versions. Update to the latest version from the releases page.
+**Camera feed not loading**
+1. Test the camera URL directly in your browser
+2. For Bambu Lab: ensure ffmpeg is installed
+3. Try switching from MJPEG to Snapshot mode in camera settings
+4. Check firewall settings for the camera port
 
-**If port 3001 is in use:**
-Another application is using port 3001. Find and stop it, or check if another instance of PrintFlow is already running.`
+**Shipping rates not loading**
+1. Verify carrier credentials in Settings → Shipping
+2. Check that sandbox mode is set correctly
+3. Ensure the sender/return address is complete
+4. Try testing with a known-good destination address first`,
       },
       {
-        title: 'App Skips Setup Wizard',
-        content: `**Symptom:** App goes straight to login instead of showing setup wizard.
+        id: 'reset',
+        title: 'Factory Reset',
+        content: `If you need to start completely fresh:
 
-**Cause:** The config file has setupComplete = true from a previous attempt.
+1. Close PrintFlow Lite
+2. Delete the database file (path shown in Settings → Data)
+3. Reopen PrintFlow — the setup wizard will appear again
 
-**Fix on Windows:**
-Open PowerShell:
-
-$config = Get-Content "C:\\Users\\[username]\\AppData\\Roaming\\printflow-lite\\printflow-lite-config.json" | ConvertFrom-Json
-$config.setupComplete = $false
-$config | ConvertTo-Json | Set-Content "C:\\Users\\[username]\\AppData\\Roaming\\printflow-lite\\printflow-lite-config.json"
-
-Also delete the database to start fresh:
-Remove-Item "C:\\Users\\[username]\\AppData\\Roaming\\printflow-lite\\data\\*"
-
-**Fix on Mac:**
-In Terminal:
-nano ~/Library/Application\\ Support/PrintFlow\\ Lite/printflow-lite-config.json
-Change "setupComplete": true to "setupComplete": false
-Save with Ctrl+X, Y, Enter`
+**Warning:** This permanently deletes all orders, customers, financial data, printer configs, and settings. Create a backup first!`,
       },
-      {
-        title: '"Damaged App" on Mac',
-        content: `**Symptom:** macOS says "PrintFlow Lite is damaged and can't be opened."
-
-**Cause:** macOS quarantine flag on unsigned/ad-hoc signed apps.
-
-**Fix:**
-Open Terminal and run:
-xattr -cr "/Applications/PrintFlow Lite.app"
-
-Then try opening again. You may need to right-click → Open the first time.
-
-**Why this happens:**
-PrintFlow Lite is ad-hoc signed, not notarized by Apple. Full notarization requires an Apple Developer Program account ($99/year). The app is safe — this is just Apple's gatekeeper for uncertified apps.`
-      },
-      {
-        title: 'Network Error During Setup',
-        content: `**Symptom:** Clicking "Finish Setup" shows a network error.
-
-**Causes and fixes:**
-
-1. **Server not ready yet** — The button should be greyed out with "Starting server…" until the server is ready. If you somehow clicked it too fast, wait and try again.
-
-2. **Server crashed** — Check if the server is running. Open Settings → Data → Open in Explorer and look for an error.log file.
-
-3. **Port conflict** — Another app is using port 3001. Close it.
-
-4. **Antivirus blocking** — Some antivirus software blocks local server connections. Add an exception for PrintFlow Lite.
-
-5. **Windows Firewall** — On first launch, Windows may ask if you want to allow the app on your network. Click "Allow".`
-      },
-    ]
+    ],
   },
+
+  // ─ Keyboard Shortcuts ─
   {
-    id: 'updates',
-    title: 'Updates',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>,
+    id: 'shortcuts',
+    title: 'Keyboard Shortcuts',
+    icon: '⌨️',
     articles: [
       {
-        title: 'Updating PrintFlow Lite',
-        content: `PrintFlow Lite checks for updates automatically when you launch the app.
+        id: 'shortcut-list',
+        title: 'All Keyboard Shortcuts',
+        content: `**Global:**
+- \`Ctrl/⌘ + N\` — New Order
+- \`Ctrl/⌘ + F\` — Search (orders, customers, printers)
+- \`Ctrl/⌘ + ,\` — Settings
+- \`Ctrl/⌘ + D\` — Dashboard
+- \`Ctrl/⌘ + Q\` — Job Queue
+- \`Ctrl/⌘ + /\` — Help (this page)
 
-**How updates work:**
-1. App launches and immediately checks GitHub Releases in the background
-2. If a new version is available, a blue banner appears in the sidebar
-3. Click "Download" to open the download page in your browser
-4. Download and install the new version over the existing one
+**Orders:**
+- \`Ctrl/⌘ + S\` — Save current order
+- \`Ctrl/⌘ + P\` — Print order / label
+- \`Escape\` — Close modal / cancel
 
-**Manual check:**
-Settings → Updates → Check for Updates
+**Job Queue:**
+- \`→\` — Move selected job forward
+- \`←\` — Move selected job backward
 
-**Release notes:**
-Settings → Updates → Release Notes shows what changed in each version.
-
-**Your data is safe:**
-Updates never touch your database or configuration. Your orders, customers, filament, and settings are preserved across updates.
-
-**Auto-install:**
-PrintFlow does not auto-install updates. You always choose when to update. This is intentional — you're running a business and shouldn't have updates forced on you.
-
-**Download page:**
-https://github.com/rbd992/printflow-lite/releases/latest`
+**Theme:**
+- \`Ctrl/⌘ + Shift + T\` — Toggle light/dark mode`,
       },
-    ]
-  },
-  {
-    id: 'support',
-    title: 'Support & Feedback',
-    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-    articles: [
-      {
-        title: 'Getting Help',
-        content: `**GitHub Issues (Bugs & Feature Requests)**
-https://github.com/rbd992/printflow-lite/issues
-
-This is the best place to report bugs or request features. Use the bug report or feature request templates. Include your OS version and PrintFlow version number.
-
-**GitHub Discussions (Questions & Ideas)**
-https://github.com/rbd992/printflow-lite/discussions
-
-For general questions, sharing how you're using PrintFlow, or discussing ideas that aren't ready to be a formal feature request.
-
-**What to include in a bug report:**
-• PrintFlow Lite version (shown in login screen footer and Settings → Updates)
-• Your OS and version (Windows 11, macOS 15.x, etc.)
-• Steps to reproduce the bug
-• What you expected to happen
-• What actually happened
-• Any error messages
-
-**Contributing**
-PrintFlow Lite is open source. Contributions are welcome — see CONTRIBUTING.md on GitHub. This project is built by a maker for makers — your input directly shapes the roadmap.
-
-**Support the project**
-If PrintFlow Lite saves you time or helps your business, consider buying me a coffee at https://buymeacoffee.com/rbd992. It helps fund development time.`
-      },
-    ]
+    ],
   },
 ];
 
+
+// ── HelpPage Component ──────────────────────────────────────────────────────
+
 export default function HelpPage() {
   const [activeSection, setActiveSection] = useState('getting-started');
-  const [activeArticle, setActiveArticle] = useState(0);
-  const [search, setSearch] = useState('');
+  const [activeArticle, setActiveArticle] = useState('first-launch');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const currentSection = SECTIONS.find(s => s.id === activeSection);
-  const currentArticle = currentSection?.articles[activeArticle];
-
-  // Search
-  const searchResults = search.trim().length > 1
-    ? SECTIONS.flatMap(s => s.articles.map(a => ({ ...a, section: s.title, sectionId: s.id, idx: s.articles.indexOf(a) }))).filter(a => a.title.toLowerCase().includes(search.toLowerCase()) || a.content.toLowerCase().includes(search.toLowerCase()))
-    : [];
-
-  function renderContent(text) {
-    return text.split('\n').map((line, i) => {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return <div key={i} style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginTop: i > 0 ? 18 : 0, marginBottom: 6 }}>{line.replace(/\*\*/g, '')}</div>;
-      }
-      if (line.startsWith('• ')) {
-        return <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4, paddingLeft: 4 }}>
-          <span style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }}>•</span>
-          <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }}>{line.slice(2)}</span>
-        </div>;
-      }
-      if (line.match(/^\d+\./)) {
-        const [num, ...rest] = line.split('. ');
-        return <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 4, paddingLeft: 4 }}>
-          <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 11, flexShrink: 0, minWidth: 16, marginTop: 2 }}>{num}.</span>
-          <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }}>{rest.join('. ')}</span>
-        </div>;
-      }
-      if (line.trim() === '') return <div key={i} style={{ height: 8 }}/>;
-      // Code lines (indented)
-      if (line.startsWith('   ') || line.startsWith('\t')) {
-        return <div key={i} style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent)', background: 'var(--bg-hover)', padding: '2px 10px', borderRadius: 6, margin: '3px 0' }}>{line.trim()}</div>;
-      }
-      // Inline code (backtick)
-      const parts = line.split(/(`[^`]+`)/g);
-      return <p key={i} style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.75, marginBottom: 6 }}>
-        {parts.map((p, j) => p.startsWith('`') && p.endsWith('`')
-          ? <code key={j} style={{ fontFamily: 'monospace', fontSize: 11.5, color: 'var(--accent)', background: 'var(--bg-hover)', padding: '1px 6px', borderRadius: 4 }}>{p.slice(1,-1)}</code>
-          : p
-        )}
-      </p>;
+  // Search across all articles
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const q = searchQuery.toLowerCase();
+    const results = [];
+    HELP_SECTIONS.forEach(section => {
+      section.articles.forEach(article => {
+        if (
+          article.title.toLowerCase().includes(q) ||
+          article.content.toLowerCase().includes(q)
+        ) {
+          results.push({ ...article, sectionId: section.id, sectionTitle: section.title });
+        }
+      });
     });
-  }
+    return results;
+  }, [searchQuery]);
+
+  const currentSection = HELP_SECTIONS.find(s => s.id === activeSection);
+  const currentArticle = currentSection?.articles.find(a => a.id === activeArticle)
+    || currentSection?.articles[0];
+
+  const navigateTo = (sectionId, articleId) => {
+    setActiveSection(sectionId);
+    setActiveArticle(articleId);
+    setSearchQuery('');
+  };
+
+  // Simple markdown-ish renderer for content
+  const renderContent = (text) => {
+    return text.split('\n').map((line, i) => {
+      // Headers
+      if (line.startsWith('**') && line.endsWith('**')) {
+        return <h3 key={i} style={styles.contentH3}>{line.replace(/\*\*/g, '')}</h3>;
+      }
+      if (line.match(/^\*\*.*\*\*$/)) {
+        return <h3 key={i} style={styles.contentH3}>{line.replace(/\*\*/g, '')}</h3>;
+      }
+      // Bold inline
+      if (line.includes('**')) {
+        const parts = line.split(/\*\*(.*?)\*\*/g);
+        return (
+          <p key={i} style={styles.contentP}>
+            {parts.map((part, j) => j % 2 === 1 ? <strong key={j}>{part}</strong> : part)}
+          </p>
+        );
+      }
+      // List items
+      if (line.match(/^[\s]*[-•]\s/)) {
+        return <p key={i} style={styles.contentLi}>{line.replace(/^[\s]*[-•]\s/, '')}</p>;
+      }
+      // Numbered items
+      if (line.match(/^[\s]*\d+\.\s/)) {
+        return <p key={i} style={styles.contentLi}>{line}</p>;
+      }
+      // Code inline
+      if (line.includes('`')) {
+        const parts = line.split(/`(.*?)`/g);
+        return (
+          <p key={i} style={styles.contentP}>
+            {parts.map((part, j) => j % 2 === 1 ? <code key={j} style={styles.code}>{part}</code> : part)}
+          </p>
+        );
+      }
+      // Empty lines
+      if (!line.trim()) return <div key={i} style={{ height: 12 }} />;
+      // Regular text
+      return <p key={i} style={styles.contentP}>{line}</p>;
+    });
+  };
+
+  const styles = {
+    page: { display: 'flex', height: '100%', fontFamily: "'Manrope', -apple-system, sans-serif", background: 'var(--bg-primary, #0f1117)', color: 'var(--text-primary, #e2e8f0)' },
+    sidebar: { width: 260, flexShrink: 0, borderRight: '1px solid var(--border, rgba(255,255,255,0.08))', overflowY: 'auto', padding: '24px 0' },
+    main: { flex: 1, overflowY: 'auto', padding: '32px 40px' },
+    sidebarHeader: { padding: '0 20px 20px', borderBottom: '1px solid var(--border, rgba(255,255,255,0.06))', marginBottom: 12 },
+    searchInput: { width: '100%', height: 36, padding: '0 12px', fontSize: 13, fontFamily: 'inherit', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'inherit', outline: 'none' },
+    sectionBtn: (active) => ({ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 20px', border: 'none', background: active ? 'rgba(96,165,250,0.1)' : 'transparent', color: active ? '#93bbfd' : 'rgba(255,255,255,0.6)', fontSize: 13.5, fontWeight: active ? 600 : 500, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', borderLeft: active ? '2px solid #60a5fa' : '2px solid transparent', transition: 'all 150ms ease' }),
+    articleBtn: (active) => ({ display: 'block', width: '100%', padding: '7px 20px 7px 50px', border: 'none', background: active ? 'rgba(96,165,250,0.06)' : 'transparent', color: active ? '#93bbfd' : 'rgba(255,255,255,0.4)', fontSize: 12.5, fontWeight: active ? 600 : 400, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', transition: 'all 150ms ease' }),
+    articleTitle: { fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 24, lineHeight: 1.3 },
+    contentH3: { fontSize: 15, fontWeight: 700, marginTop: 20, marginBottom: 8, color: 'var(--text-primary, #e2e8f0)' },
+    contentP: { fontSize: 14, lineHeight: 1.75, marginBottom: 4, color: 'rgba(255,255,255,0.7)' },
+    contentLi: { fontSize: 14, lineHeight: 1.75, marginBottom: 2, paddingLeft: 16, color: 'rgba(255,255,255,0.7)' },
+    code: { fontFamily: "'SF Mono', 'Fira Code', monospace", fontSize: 12.5, background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4, color: '#93bbfd' },
+    searchResult: { padding: '12px 16px', borderRadius: 8, cursor: 'pointer', marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' },
+    versionFooter: { padding: '20px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto', fontSize: 11.5, color: 'rgba(255,255,255,0.3)', textAlign: 'center' },
+  };
 
   return (
-    <div style={{ height: '100%', display: 'flex', overflow: 'hidden' }}>
-      {/* Left sidebar */}
-      <div style={{ width: 220, flexShrink: 0, borderRight: '0.5px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg-sidebar)' }}>
-        {/* Search */}
-        <div style={{ padding: '16px 14px', borderBottom: '0.5px solid var(--border)' }}>
-          <div style={{ position: 'relative' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search docs…"
-              style={{ width: '100%', boxSizing: 'border-box', padding: '7px 10px 7px 30px', background: 'var(--bg-hover)', border: '0.5px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
-            />
-          </div>
+    <div style={styles.page}>
+      {/* ── Sidebar ───────────────────────────────────────────────────── */}
+      <div style={styles.sidebar}>
+        <div style={styles.sidebarHeader}>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Help Center</div>
+          <input
+            style={styles.searchInput}
+            placeholder="Search help articles…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            spellCheck="false"
+          />
         </div>
 
-        {/* Section nav */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
-          {search.trim().length > 1 ? (
-            <div>
-              <div style={{ padding: '4px 14px 8px', fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>{searchResults.length} Results</div>
-              {searchResults.map((r, i) => (
-                <button key={i} onClick={() => { setActiveSection(r.sectionId); setActiveArticle(r.idx); setSearch(''); }} style={{ display: 'block', width: '100%', padding: '8px 14px', border: 'none', background: 'transparent', color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer', textAlign: 'left', lineHeight: 1.4 }}>
-                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{r.title}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>{r.section}</div>
-                </button>
-              ))}
-              {searchResults.length === 0 && <div style={{ padding: '20px 14px', fontSize: 12, color: 'var(--text-tertiary)' }}>No results found</div>}
-            </div>
-          ) : (
-            SECTIONS.map(s => (
-              <div key={s.id}>
-                <button onClick={() => { setActiveSection(s.id); setActiveArticle(0); }} style={{
-                  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                  padding: '8px 14px', border: 'none', background: activeSection === s.id ? 'var(--accent-light)' : 'transparent',
-                  color: activeSection === s.id ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontSize: 13, fontWeight: activeSection === s.id ? 600 : 400, cursor: 'pointer',
-                  borderLeft: `2px solid ${activeSection === s.id ? 'var(--accent)' : 'transparent'}`,
-                  textAlign: 'left',
-                }}>
-                  <span style={{ opacity: 0.8, flexShrink: 0 }}>{s.icon}</span>
-                  {s.title}
-                </button>
-                {activeSection === s.id && s.articles.map((a, i) => (
-                  <button key={i} onClick={() => setActiveArticle(i)} style={{
-                    display: 'block', width: '100%', padding: '6px 14px 6px 36px', border: 'none',
-                    background: activeArticle === i ? 'var(--bg-active)' : 'transparent',
-                    color: activeArticle === i ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                    fontSize: 12, cursor: 'pointer', textAlign: 'left', fontWeight: activeArticle === i ? 500 : 400,
-                  }}>
-                    {a.title}
+        {HELP_SECTIONS.map(section => (
+          <div key={section.id}>
+            <button
+              style={styles.sectionBtn(activeSection === section.id && !searchQuery)}
+              onClick={() => navigateTo(section.id, section.articles[0]?.id)}
+            >
+              <span>{section.icon}</span>
+              <span>{section.title}</span>
+            </button>
+            {activeSection === section.id && !searchQuery && (
+              <div>
+                {section.articles.map(article => (
+                  <button
+                    key={article.id}
+                    style={styles.articleBtn(activeArticle === article.id)}
+                    onClick={() => navigateTo(section.id, article.id)}
+                  >
+                    {article.title}
                   </button>
                 ))}
               </div>
-            ))
-          )}
+            )}
+          </div>
+        ))}
+
+        <div style={styles.versionFooter}>
+          PrintFlow Lite v{APP_VERSION}
         </div>
       </div>
 
-      {/* Article content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
-        {currentArticle && (
-          <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 8, fontSize: 11, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              {currentSection?.icon}
-              {currentSection?.title}
-            </div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.025em', marginBottom: 24, lineHeight: 1.2 }}>{currentArticle.title}</h1>
-            <div>{renderContent(currentArticle.content)}</div>
-            {/* Nav */}
-            <div style={{ marginTop: 48, paddingTop: 20, borderTop: '0.5px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
-              {activeArticle > 0 && (
-                <button className="btn btn-ghost btn-sm" onClick={() => setActiveArticle(a => a - 1)} style={{ gap: 6 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                  Previous
-                </button>
-              )}
-              <div/>
-              {activeArticle < (currentSection?.articles.length || 0) - 1 && (
-                <button className="btn btn-ghost btn-sm" onClick={() => setActiveArticle(a => a + 1)} style={{ gap: 6 }}>
-                  Next
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-              )}
-            </div>
+      {/* ── Main Content ─────────────────────────────────────────────── */}
+      <div style={styles.main}>
+        {searchQuery && searchResults ? (
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+            </h2>
+            {searchResults.length === 0 && (
+              <p style={{ color: 'rgba(255,255,255,0.5)' }}>
+                No articles match your search. Try different keywords.
+              </p>
+            )}
+            {searchResults.map(result => (
+              <div
+                key={result.id}
+                style={styles.searchResult}
+                onClick={() => navigateTo(result.sectionId, result.id)}
+              >
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{result.title}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{result.sectionTitle}</div>
+              </div>
+            ))}
           </div>
-        )}
+        ) : currentArticle ? (
+          <motion.div
+            key={currentArticle.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              {currentSection?.icon} {currentSection?.title}
+            </div>
+            <h1 style={styles.articleTitle}>{currentArticle.title}</h1>
+            {renderContent(currentArticle.content)}
+          </motion.div>
+        ) : null}
       </div>
     </div>
   );

@@ -1,331 +1,418 @@
+﻿// ──────────────────────────────────────────────────────────────────────────────
+// PrintFlow Lite v0.1.4 — LoginPage.js
+// Apple-inspired glassmorphism login with professional polish
+// Drop-in replacement for src/renderer/pages/LoginPage.js
+// ──────────────────────────────────────────────────────────────────────────────
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
-import { setServerUrlCache } from '../api/client';
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../api/client';
+import './LoginPage.css';
 
-// ── PrintFlow Wordmark ────────────────────────────────────────────────────
-function PFMark({ size = 40 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <defs>
-        <linearGradient id="pf-a" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#60A5FA"/>
-          <stop offset="100%" stopColor="#2563EB"/>
-        </linearGradient>
-        <linearGradient id="pf-b" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#34D399"/>
-          <stop offset="100%" stopColor="#059669"/>
-        </linearGradient>
-      </defs>
-      {/* F letterform */}
-      <rect x="9"  y="7"  width="4"  height="26" rx="2" fill="url(#pf-a)"/>
-      <rect x="9"  y="7"  width="18" height="4"  rx="2" fill="url(#pf-a)"/>
-      <rect x="9"  y="18" width="12" height="4"  rx="2" fill="url(#pf-a)" opacity="0.8"/>
-      {/* Accent dot — 3D print layer indicator */}
-      <circle cx="30" cy="31" r="3.5" fill="url(#pf-b)"/>
-      <circle cx="30" cy="31" r="1.5" fill="white" opacity="0.6"/>
-    </svg>
-  );
-}
+const APP_VERSION = '0.1.4-beta';
 
-// ── Server progress bar ───────────────────────────────────────────────────
-function ServerBar({ progress, phase, ready }) {
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{
-        height: 3, borderRadius: 99,
-        background: 'rgba(255,255,255,0.06)',
-        overflow: 'hidden', marginBottom: 10,
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${Math.max(3, progress)}%`,
-          background: ready
-            ? 'linear-gradient(90deg, #34D399, #059669)'
-            : 'linear-gradient(90deg, #3B82F6, #60A5FA)',
-          borderRadius: 99,
-          transition: 'width 0.4s ease, background 0.5s ease',
-          boxShadow: ready
-            ? '0 0 12px rgba(52,211,153,0.5)'
-            : '0 0 12px rgba(59,130,246,0.4)',
-        }}/>
-      </div>
-      <p style={{
-        textAlign: 'center', fontSize: 11,
-        color: 'rgba(255,255,255,0.28)',
-        letterSpacing: '0.04em', margin: 0,
-        fontVariantNumeric: 'tabular-nums',
-      }}>
-        {phase}
-      </p>
-    </div>
-  );
-}
+// ── SVG Icon Components (no external deps, crisp at any size) ────────────────
 
-export default function LoginPage() {
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
-  const [loading,  setLoading]  = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [phase,    setPhase]    = useState('Starting server…');
-  const [ready,    setReady]    = useState(false);
-  const [updateInfo, setUpdateInfo] = useState(null);
-  const submitting = useRef(false);
+const PrintFlowLogo = ({ size = 48 }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Outer cube frame */}
+    <path d="M24 4L42 14V34L24 44L6 34V14L24 4Z" stroke="url(#logoGrad)" strokeWidth="1.5" fill="none" opacity="0.3"/>
+    {/* Inner layered print bed */}
+    <path d="M24 8L38 16V32L24 40L10 32V16L24 8Z" stroke="url(#logoGrad)" strokeWidth="1.2" fill="none" opacity="0.5"/>
+    {/* Print layers */}
+    <path d="M14 28L24 34L34 28" stroke="url(#logoGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+    <path d="M14 24L24 30L34 24" stroke="url(#logoGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.75"/>
+    <path d="M14 20L24 26L34 20" stroke="url(#logoGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.9"/>
+    {/* Nozzle / extruder dot */}
+    <circle cx="24" cy="16" r="2.5" fill="url(#logoGrad)"/>
+    {/* Filament path */}
+    <path d="M24 6V13.5" stroke="url(#logoGrad)" strokeWidth="1.2" strokeLinecap="round" strokeDasharray="2 2" opacity="0.5"/>
+    <defs>
+      <linearGradient id="logoGrad" x1="6" y1="4" x2="42" y2="44">
+        <stop offset="0%" stopColor="#60A5FA"/>
+        <stop offset="50%" stopColor="#818CF8"/>
+        <stop offset="100%" stopColor="#A78BFA"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
-  const { login, error, clearError, token } = useAuthStore();
-  const navigate = useNavigate();
+const IconUser = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="9" cy="5.5" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M2.5 15.5C2.5 12.186 5.41 9.5 9 9.5C12.59 9.5 15.5 12.186 15.5 15.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconLock = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3.5" y="8" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+    <path d="M6 8V5.5C6 3.843 7.343 2.5 9 2.5C10.657 2.5 12 3.843 12 5.5V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <circle cx="9" cy="12" r="1.2" fill="currentColor"/>
+  </svg>
+);
+
+const IconEye = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1.5 9C1.5 9 4 3.5 9 3.5C14 3.5 16.5 9 16.5 9C16.5 9 14 14.5 9 14.5C4 14.5 1.5 9 1.5 9Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
+  </svg>
+);
+
+const IconEyeOff = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 2L16 16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M7.05 7.05C6.7 7.4 6.5 7.88 6.5 8.4C6.5 9.78 7.62 10.9 9 10.9C9.52 10.9 10 10.7 10.35 10.35" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M3.5 5.5C2.4 6.7 1.5 8.2 1.5 9C1.5 9 4 14.5 9 14.5C10.2 14.5 11.3 14.1 12.2 13.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M14.5 12.5C15.6 11.3 16.5 9.8 16.5 9C16.5 9 14 3.5 9 3.5C7.8 3.5 6.7 3.9 5.8 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconSpinner = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="pf-spinner">
+    <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" opacity="0.25"/>
+    <path d="M18 10C18 5.582 14.418 2 10 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// ── Background Canvas (animated mesh gradient) ──────────────────────────────
+
+const MeshBackground = () => {
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (token) navigate('/', { replace: true });
-  }, [token, navigate]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let time = 0;
 
-  useEffect(() => {
-    clearError();
-    setServerUrlCache('http://127.0.0.1:3001');
-    try { const e = localStorage.getItem('pf_email'); if (e) setEmail(e); } catch {}
+    const resize = () => {
+      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.height = window.innerHeight * window.devicePixelRatio;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
 
-    window.printflow?.onServerProgress?.(({ progress: pct, ready: r }) => {
-      setProgress(pct);
-      if      (pct < 30)  setPhase('Starting server…');
-      else if (pct < 65)  setPhase('Loading database…');
-      else if (pct < 95)  setPhase('Almost ready…');
-      else if (r)         { setPhase('Ready'); setReady(true); }
-    });
+    const orbs = [
+      { x: 0.2, y: 0.3, r: 350, color: [30, 58, 138] },   // deep blue
+      { x: 0.7, y: 0.2, r: 300, color: [49, 46, 129] },    // indigo
+      { x: 0.5, y: 0.7, r: 380, color: [15, 23, 42] },     // slate
+      { x: 0.8, y: 0.8, r: 250, color: [30, 27, 75] },     // violet dark
+    ];
 
-    window.printflow?.onServerError?.(() => setPhase('Server error — restart app'));
-    window.printflow?.onUpdateAvailable?.(info => setUpdateInfo(info));
+    const draw = () => {
+      time += 0.002;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
 
-    window.printflow?.serverIsReady?.().then(r => {
-      if (r) { setProgress(100); setPhase('Ready'); setReady(true); }
-    }).catch(() => {});
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#0a0e1a';
+      ctx.fillRect(0, 0, w, h);
+
+      orbs.forEach((orb, i) => {
+        const ox = orb.x * w + Math.sin(time + i * 1.5) * 60;
+        const oy = orb.y * h + Math.cos(time + i * 2) * 40;
+        const gradient = ctx.createRadialGradient(ox, oy, 0, ox, oy, orb.r);
+        gradient.addColorStop(0, `rgba(${orb.color.join(',')}, 0.6)`);
+        gradient.addColorStop(1, `rgba(${orb.color.join(',')}, 0)`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+      });
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    window.addEventListener('resize', resize);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
   }, []);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (loading || submitting.current || !ready) return;
-    submitting.current = true;
-    setLoading(true);
-    try { localStorage.setItem('pf_email', email); } catch {}
-    await login(email, password);
-    submitting.current = false;
-    setLoading(false);
-  }
+  return <canvas ref={canvasRef} className="pf-mesh-bg" />;
+};
 
-  const canSubmit = ready && email && password && !loading;
+// ── Main Login Component ────────────────────────────────────────────────────
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [isFirstRun, setIsFirstRun] = useState(false);
+  const usernameRef = useRef(null);
+
+  useEffect(() => {
+    // Check if first run (no users exist yet)
+    const checkFirstRun = async () => {
+      try {
+        const res = await api.get('/auth/status');
+        if (res.data && res.data.firstRun) {
+          setIsFirstRun(true);
+        }
+      } catch {
+        // Server not ready yet, ignore
+      }
+    };
+
+    // Load remembered username
+    const saved = localStorage.getItem('pf_remember_user');
+    if (saved) {
+      setUsername(saved);
+      setRememberMe(true);
+    }
+
+    checkFirstRun();
+    setTimeout(() => usernameRef.current?.focus(), 600);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!username.trim() || !password.trim()) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const res = await api.post('/auth/login', {
+        username: username.trim(),
+        password,
+      });
+
+      if (res.data?.token) {
+        // Store JWT
+        localStorage.setItem('pf_token', res.data.token);
+        if (res.data.user) {
+          localStorage.setItem('pf_user', JSON.stringify(res.data.user));
+        }
+        if (rememberMe) {
+          localStorage.setItem('pf_remember_user', username.trim());
+        } else {
+          localStorage.removeItem('pf_remember_user');
+        }
+
+        setSuccess(true);
+        setTimeout(() => navigate('/dashboard'), 900);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.error || err.response?.data?.message;
+      if (err.response?.status === 401) {
+        setError(msg || 'Invalid username or password.');
+      } else if (err.response?.status === 423) {
+        setError(msg || 'Account is locked. Contact your administrator.');
+      } else if (!err.response) {
+        setError('Cannot reach PrintFlow server. Make sure the app is running.');
+      } else {
+        setError(msg || 'Login failed. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Staggered entrance animations ──────────────────────────────────────
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.15 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16, filter: 'blur(8px)' },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+    },
+  };
 
   return (
-    <div style={{
-      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#050510', position: 'relative', overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
-    }}>
-      {/* Drag region */}
-      <div className="drag-region" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 44, zIndex: 100 }}/>
+    <div className="pf-login-root">
+      <MeshBackground />
 
-      {/* Ambient glow layers */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', width: 800, height: 800, borderRadius: '50%', top: -350, left: -200, background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 65%)' }}/>
-        <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', bottom: -300, right: -150, background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 65%)' }}/>
-        <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', top: '40%', left: '55%', background: 'radial-gradient(circle, rgba(52,211,153,0.04) 0%, transparent 65%)' }}/>
-      </div>
+      {/* Noise overlay for texture */}
+      <div className="pf-noise-overlay" />
 
-      {/* Subtle grid */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
-        backgroundSize: '52px 52px',
-      }}/>
+      <motion.div
+        className="pf-login-container"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* ── Glass Card ─────────────────────────────────────────────────── */}
+        <motion.div className="pf-glass-card" variants={itemVariants}>
 
-      {/* Card */}
-      <div style={{
-        width: 380, position: 'relative', zIndex: 1,
-        background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
-        border: '0.5px solid rgba(255,255,255,0.08)',
-        borderRadius: 24,
-        padding: '44px 40px 36px',
-        boxShadow: `
-          0 0 0 0.5px rgba(255,255,255,0.04) inset,
-          0 1px 0 rgba(255,255,255,0.08) inset,
-          0 48px 120px rgba(0,0,0,0.8),
-          0 12px 40px rgba(0,0,0,0.5)
-        `,
-        backdropFilter: 'blur(48px)',
-        WebkitBackdropFilter: 'blur(48px)',
-        animation: 'loginFadeUp 0.4s cubic-bezier(0.16,1,0.3,1)',
-      }}>
+          {/* Logo + Brand */}
+          <motion.div className="pf-brand" variants={itemVariants}>
+            <div className="pf-logo-wrap">
+              <PrintFlowLogo size={52} />
+            </div>
+            <h1 className="pf-title">PrintFlow <span className="pf-title-lite">Lite</span></h1>
+            <p className="pf-subtitle">3D Print Business Suite</p>
+          </motion.div>
 
-        {/* Logo + wordmark */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{
-            width: 68, height: 68, borderRadius: 20, margin: '0 auto 20px',
-            background: 'linear-gradient(145deg, rgba(59,130,246,0.15), rgba(37,99,235,0.06))',
-            border: '0.5px solid rgba(59,130,246,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(59,130,246,0.15), 0 0 0 1px rgba(59,130,246,0.08) inset',
-          }}>
-            <PFMark size={38}/>
-          </div>
+          {/* Error Banner */}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div
+                className="pf-error-banner"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M8 4.5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  <circle cx="8" cy="11" r="0.8" fill="currentColor"/>
+                </svg>
+                <span>{error}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.03em' }}>PrintFlow</span>
-            <span style={{
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: '#60A5FA',
-              background: 'rgba(59,130,246,0.12)',
-              border: '0.5px solid rgba(59,130,246,0.25)',
-              borderRadius: 6, padding: '3px 7px',
-            }}>LITE</span>
-          </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.22)', margin: 0, letterSpacing: '0.02em' }}>
-            3D Print Business Suite
-          </p>
-        </div>
-
-        {/* Server progress */}
-        {!ready && <ServerBar progress={progress} phase={phase} ready={ready}/>}
-
-        {/* Update banner */}
-        {updateInfo && ready && (
-          <div style={{
-            marginBottom: 20, padding: '11px 14px',
-            background: 'rgba(59,130,246,0.07)',
-            border: '0.5px solid rgba(59,130,246,0.2)',
-            borderRadius: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-          }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#60A5FA', marginBottom: 2 }}>
-                Update available — v{updateInfo.latestVersion}
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="pf-form" autoComplete="off">
+            <motion.div className="pf-field" variants={itemVariants}>
+              <label className="pf-label" htmlFor="pf-user">Username</label>
+              <div className="pf-input-wrap">
+                <span className="pf-input-icon"><IconUser /></span>
+                <input
+                  ref={usernameRef}
+                  id="pf-user"
+                  type="text"
+                  className="pf-input"
+                  placeholder="Enter username"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setError(''); }}
+                  disabled={isLoading || success}
+                  autoComplete="username"
+                  spellCheck="false"
+                />
               </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>You have v{updateInfo.currentVersion}</div>
-            </div>
-            <button onClick={() => window.printflow.downloadUpdate(updateInfo.winUrl || updateInfo.macUrl)} style={{
-              padding: '6px 12px', background: '#2563EB', color: '#fff',
-              border: 'none', borderRadius: 8, fontSize: 11, fontWeight: 600,
-              cursor: 'pointer', flexShrink: 0,
-            }}>Download</button>
-          </div>
-        )}
+            </motion.div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ opacity: ready ? 1 : 0.3, transition: 'opacity 0.4s', pointerEvents: ready ? 'auto' : 'none' }}>
+            <motion.div className="pf-field" variants={itemVariants}>
+              <label className="pf-label" htmlFor="pf-pass">Password</label>
+              <div className="pf-input-wrap">
+                <span className="pf-input-icon"><IconLock /></span>
+                <input
+                  id="pf-pass"
+                  type={showPassword ? 'text' : 'password'}
+                  className="pf-input pf-input-password"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  disabled={isLoading || success}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="pf-toggle-vis"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <IconEyeOff /> : <IconEye />}
+                </button>
+              </div>
+            </motion.div>
 
-          {/* Email */}
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 7 }}>
-              Email
-            </label>
-            <input
-              type="email" value={email} onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com" required autoFocus={ready}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '11px 14px',
-                background: 'rgba(255,255,255,0.04)',
-                border: '0.5px solid rgba(255,255,255,0.08)',
-                borderRadius: 11, color: '#F8FAFC', fontSize: 14,
-                outline: 'none', fontFamily: 'inherit',
-                transition: 'border-color 0.15s, box-shadow 0.15s',
-              }}
-              onFocus={e => { e.target.style.borderColor = 'rgba(59,130,246,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'; }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
-            />
-          </div>
+            <motion.div className="pf-row-between" variants={itemVariants}>
+              <label className="pf-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="pf-checkbox-native"
+                />
+                <span className={`pf-checkbox-box ${rememberMe ? 'checked' : ''}`}>
+                  {rememberMe && <IconCheck />}
+                </span>
+                <span className="pf-checkbox-text">Remember me</span>
+              </label>
+            </motion.div>
 
-          {/* Password */}
-          <div style={{ marginBottom: 22 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 7 }}>
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••" required
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  padding: '11px 42px 11px 14px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '0.5px solid rgba(255,255,255,0.08)',
-                  borderRadius: 11, color: '#F8FAFC', fontSize: 14,
-                  outline: 'none', fontFamily: 'inherit',
-                  transition: 'border-color 0.15s, box-shadow 0.15s',
-                }}
-                onFocus={e => { e.target.style.borderColor = 'rgba(59,130,246,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'; }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
-              />
-              <button type="button" onClick={() => setShowPass(v => !v)} style={{
-                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-                color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center',
-              }}>
-                {showPass
-                  ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                }
+            <motion.div variants={itemVariants}>
+              <button
+                type="submit"
+                className={`pf-btn-primary ${success ? 'pf-btn-success' : ''}`}
+                disabled={isLoading || success}
+              >
+                <AnimatePresence mode="wait">
+                  {success ? (
+                    <motion.span
+                      key="check"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="pf-btn-content"
+                    >
+                      <IconCheck /> Authenticated
+                    </motion.span>
+                  ) : isLoading ? (
+                    <motion.span
+                      key="loading"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="pf-btn-content"
+                    >
+                      <IconSpinner /> Signing in…
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="idle"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="pf-btn-content"
+                    >
+                      Sign In
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </button>
-            </div>
-          </div>
+            </motion.div>
+          </form>
 
-          {/* Error */}
-          {error && (
-            <div style={{
-              marginBottom: 16, padding: '10px 14px',
-              background: 'rgba(239,68,68,0.08)',
-              border: '0.5px solid rgba(239,68,68,0.2)',
-              borderRadius: 10, color: '#FCA5A5', fontSize: 12,
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {error}
-            </div>
+          {isFirstRun && (
+            <motion.p className="pf-first-run-hint" variants={itemVariants}>
+              First time? Use the credentials you created during setup.
+            </motion.p>
           )}
+        </motion.div>
 
-          {/* Submit */}
-          <button type="submit" disabled={!canSubmit} style={{
-            width: '100%', padding: '13px',
-            background: canSubmit
-              ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-              : 'rgba(59,130,246,0.18)',
-            color: canSubmit ? '#fff' : 'rgba(255,255,255,0.3)',
-            border: 'none', borderRadius: 12,
-            fontSize: 14, fontWeight: 600,
-            cursor: canSubmit ? 'pointer' : 'not-allowed',
-            boxShadow: canSubmit ? '0 4px 20px rgba(59,130,246,0.35)' : 'none',
-            transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            letterSpacing: '0.01em',
-          }}>
-            {loading
-              ? <><Spinner/> Signing in…</>
-              : 'Sign In'
-            }
-          </button>
-        </form>
-
-        {/* Footer */}
-        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.1)', marginTop: 24, marginBottom: 0, letterSpacing: '0.04em' }}>
-          v{window.printflow?.appVersion || '0.1.3'} · PrintFlow Lite
-        </p>
-      </div>
-
-      <style>{`
-        @keyframes loginFadeUp {
-          from { opacity: 0; transform: translateY(16px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        input::placeholder { color: rgba(255,255,255,0.15); }
-        input:-webkit-autofill {
-          -webkit-box-shadow: 0 0 0 100px #050510 inset !important;
-          -webkit-text-fill-color: #F8FAFC !important;
-          caret-color: #F8FAFC;
-        }
-      `}</style>
+        {/* ── Version Footer ─────────────────────────────────────────────── */}
+        <motion.div className="pf-version-footer" variants={itemVariants}>
+          <span className="pf-version-dot" />
+          <span>PrintFlow Lite v{APP_VERSION}</span>
+          <span className="pf-version-sep">·</span>
+          <span className="pf-version-muted">Standalone Edition</span>
+        </motion.div>
+      </motion.div>
     </div>
   );
-}
-
-function Spinner() {
-  return <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }}/>;
 }

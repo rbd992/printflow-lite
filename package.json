@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "printflow-lite",
-  "version": "0.1.3-beta",
-  "description": "PrintFlow Lite — Standalone 3D Print Business Suite",
+  "version": "0.1.4-beta",
+  "description": "PrintFlow Lite â€” Standalone 3D Print Business Suite",
   "main": "src/main/main.js",
   "author": {
     "name": "Robert Dunn",
@@ -43,7 +43,7 @@
   "build": {
     "appId": "com.printflow.lite",
     "productName": "PrintFlow Lite",
-    "copyright": "Copyright © 2026 PrintFlow",
+    "copyright": "Copyright Â© 2026 PrintFlow",
     "extends": null,
     "extraMetadata": {
       "main": "src/main/main.js"
