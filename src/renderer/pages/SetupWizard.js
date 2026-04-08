@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { api } from '../api/client';
+import axios from 'axios';
 
-// ── Professional SVG icon set ─────────────────────────────────────────────
+// Direct axios instance — bypasses the interceptor that calls window.printflow.getToken
+// which doesn't exist yet during setup
+const setupApi = axios.create({ baseURL: 'http://127.0.0.1:3001', timeout: 15000 });
+
 const Icons = {
   printer: (
     <svg width="32" height="32" viewBox="0 0 80 80" fill="none">
@@ -22,13 +25,11 @@ const Icons = {
   building: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21V11h6v10"/>
-      <path d="M9 7h.01M12 7h.01M15 7h.01M9 11h.01M15 11h.01"/>
     </svg>
   ),
   user: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
     </svg>
   ),
   sliders: (
@@ -40,22 +41,16 @@ const Icons = {
       <line x1="17" y1="16" x2="23" y2="16"/>
     </svg>
   ),
-  check: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-  ),
 };
 
 const STEPS = [
-  { id: 'welcome',  label: 'Welcome',  icon: Icons.printer  },
-  { id: 'business', label: 'Business', icon: Icons.building },
-  { id: 'account',  label: 'Account',  icon: Icons.user     },
-  { id: 'prefs',    label: 'Prefs',    icon: Icons.sliders  },
-  { id: 'done',     label: 'Done',     icon: Icons.check    },
+  { id: 'welcome',  label: 'Welcome'  },
+  { id: 'business', label: 'Business' },
+  { id: 'account',  label: 'Account'  },
+  { id: 'prefs',    label: 'Prefs'    },
+  { id: 'done',     label: 'Done'     },
 ];
 
-// ── Step indicator ────────────────────────────────────────────────────────
 function StepIndicator({ current }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 36 }}>
@@ -65,35 +60,21 @@ function StepIndicator({ current }) {
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: i < current
-                ? 'linear-gradient(135deg, #30D158, #25a847)'
-                : i === current
-                  ? 'linear-gradient(135deg, #0071E3, #0056B3)'
-                  : 'rgba(255,255,255,0.06)',
+              background: i < current ? 'linear-gradient(135deg,#30D158,#25a847)' : i === current ? 'linear-gradient(135deg,#0071E3,#0056B3)' : 'rgba(255,255,255,0.06)',
               color: i <= current ? '#fff' : 'rgba(255,255,255,0.25)',
               border: i === current ? '2px solid rgba(77,168,255,0.4)' : '2px solid transparent',
               boxShadow: i === current ? '0 0 20px rgba(0,113,227,0.35)' : 'none',
-              transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-              fontSize: 11,
+              fontSize: 11, transition: 'all 0.3s',
             }}>
               {i < current
-                ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                 : <span style={{ fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
               }
             </div>
-            <span style={{
-              fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600,
-              color: i === current ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)',
-            }}>{s.label}</span>
+            <span style={{ fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600, color: i === current ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' }}>{s.label}</span>
           </div>
           {i < STEPS.length - 1 && (
-            <div style={{
-              width: 36, height: 1, margin: '0 6px', marginBottom: 18,
-              background: i < current
-                ? 'linear-gradient(90deg, #30D158, #25a847)'
-                : 'rgba(255,255,255,0.07)',
-              transition: 'background 0.4s ease',
-            }}/>
+            <div style={{ width: 36, height: 1, margin: '0 6px', marginBottom: 18, background: i < current ? 'linear-gradient(90deg,#30D158,#25a847)' : 'rgba(255,255,255,0.07)', transition: 'background 0.4s' }}/>
           )}
         </React.Fragment>
       ))}
@@ -101,14 +82,11 @@ function StepIndicator({ current }) {
   );
 }
 
-// ── Form primitives ───────────────────────────────────────────────────────
 function Field({ label, hint, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-        <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          {label}
-        </label>
+        <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</label>
         {hint && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>{hint}</span>}
       </div>
       {children}
@@ -117,13 +95,10 @@ function Field({ label, hint, children }) {
 }
 
 const inputStyle = {
-  width: '100%', boxSizing: 'border-box',
-  padding: '11px 14px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '0.5px solid rgba(255,255,255,0.09)',
-  borderRadius: 10, color: '#fff', fontSize: 14,
-  outline: 'none', fontFamily: 'inherit',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
+  width: '100%', boxSizing: 'border-box', padding: '11px 14px',
+  background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.09)',
+  borderRadius: 10, color: '#fff', fontSize: 14, outline: 'none',
+  fontFamily: 'inherit', transition: 'border-color 0.15s, box-shadow 0.15s',
 };
 
 function Input(props) {
@@ -143,124 +118,179 @@ function Select({ children, ...props }) {
   );
 }
 
-function PrimaryBtn({ children, disabled, onClick, style = {} }) {
+function PrimaryBtn({ children, disabled, onClick }) {
   return (
     <button onClick={onClick} disabled={disabled} style={{
       width: '100%', padding: '13px',
-      background: disabled
-        ? 'rgba(0,113,227,0.2)'
-        : 'linear-gradient(135deg, #0071E3 0%, #0056B3 100%)',
+      background: disabled ? 'rgba(0,113,227,0.2)' : 'linear-gradient(135deg,#0071E3,#0056B3)',
       color: disabled ? 'rgba(255,255,255,0.3)' : '#fff',
       border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600,
       cursor: disabled ? 'not-allowed' : 'pointer',
       boxShadow: disabled ? 'none' : '0 4px 20px rgba(0,113,227,0.3)',
-      letterSpacing: '0.01em', transition: 'all 0.2s',
-      ...style,
-    }}>
-      {children}
-    </button>
+      transition: 'all 0.2s',
+    }}>{children}</button>
   );
 }
 
 function BackBtn({ onClick }) {
   return (
     <button onClick={onClick} style={{
-      flex: 1, padding: '13px',
-      background: 'rgba(255,255,255,0.05)',
-      color: 'rgba(255,255,255,0.5)',
-      border: '0.5px solid rgba(255,255,255,0.08)',
+      flex: 1, padding: '13px', background: 'rgba(255,255,255,0.05)',
+      color: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.08)',
       borderRadius: 12, fontSize: 14, cursor: 'pointer',
-      transition: 'all 0.15s',
-    }}>
-      Back
-    </button>
+    }}>Back</button>
   );
 }
 
 function ErrorBox({ msg }) {
   if (!msg) return null;
   return (
-    <div style={{
-      padding: '10px 14px', borderRadius: 10, marginBottom: 14,
-      background: 'rgba(255,59,48,0.08)',
-      border: '0.5px solid rgba(255,59,48,0.2)',
-      color: '#FF6B63', fontSize: 12, lineHeight: 1.5,
-    }}>
+    <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, background: 'rgba(255,59,48,0.08)', border: '0.5px solid rgba(255,59,48,0.2)', color: '#FF6B63', fontSize: 12, lineHeight: 1.5 }}>
       {msg}
     </div>
   );
 }
 
-// ── Card wrapper ──────────────────────────────────────────────────────────
 function Card({ children }) {
   return (
     <div style={{
-      width: 460,
-      background: 'rgba(255,255,255,0.025)',
-      border: '0.5px solid rgba(255,255,255,0.07)',
-      borderRadius: 22,
+      width: 460, background: 'rgba(255,255,255,0.025)',
+      border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 22,
       padding: '36px 38px 32px',
       boxShadow: '0 40px 100px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)',
-      backdropFilter: 'blur(40px)',
-      animation: 'fadeInUp 0.3s ease',
-    }}>
-      {children}
+      backdropFilter: 'blur(40px)', animation: 'fadeInUp 0.3s ease',
+    }}>{children}</div>
+  );
+}
+
+function SectionHeader({ icon, title, desc }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+      <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(0,113,227,0.1)', border: '0.5px solid rgba(0,113,227,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4DA8FF' }}>
+        {icon}
+      </div>
+      <div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>{title}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{desc}</div>
+      </div>
     </div>
   );
 }
 
-// ── Main wizard ───────────────────────────────────────────────────────────
+function Spinner() {
+  return <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }}/>;
+}
+
+// Wrap uses a fixed dark background — theme doesn't apply to setup wizard
+// The wizard always runs on a dark background regardless of theme setting
+function Wrap({ children }) {
+  return (
+    <div style={{
+      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'radial-gradient(ellipse at 20% 20%, rgba(0,113,227,0.06) 0%, transparent 60%), #060612',
+      overflow: 'hidden', position: 'relative',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+    }}>
+      <div className="drag-region" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 44 }}/>
+      {children}
+      <style>{`
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input::placeholder { color: rgba(255,255,255,0.18); }
+        select option { background: #0c0c1e; }
+      `}</style>
+    </div>
+  );
+}
+
 export default function SetupWizard({ onComplete }) {
   const navigate = useNavigate();
   const { login } = useAuthStore();
 
-  const [step, setStep]     = useState(0);
-  const [saving, setSaving] = useState(false);
-  const [err, setErr]       = useState('');
+  const [step, setStep]       = useState(0);
+  const [saving, setSaving]   = useState(false);
+  const [err, setErr]         = useState('');
+  const [serverReady, setServerReady] = useState(false);
 
-  const [bizName,  setBizName]  = useState('');
-  const [bizEmail, setBizEmail] = useState('');
+  const [bizName,    setBizName]    = useState('');
+  const [bizEmail,   setBizEmail]   = useState('');
   const [ownerName,  setOwnerName]  = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerPass,  setOwnerPass]  = useState('');
   const [ownerPass2, setOwnerPass2] = useState('');
-  const [currency, setCurrency] = useState('CAD');
-  const [theme,    setTheme]    = useState('dark');
+  const [currency,   setCurrency]   = useState('CAD');
+  const [theme,      setTheme]      = useState('dark');
+
+  // Poll for server ready — the Finish button stays disabled until server responds
+  useEffect(() => {
+    let interval;
+    const check = async () => {
+      try {
+        await setupApi.get('/health');
+        setServerReady(true);
+        clearInterval(interval);
+      } catch {}
+    };
+    check();
+    interval = setInterval(check, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  function applyTheme(t) {
+    setTheme(t);
+    // Apply to the whole app immediately
+    document.documentElement.setAttribute('data-theme', t);
+    window.printflow?.setTheme?.(t);
+  }
 
   async function finishSetup() {
     if (ownerPass !== ownerPass2) { setErr('Passwords do not match'); return; }
     if (ownerPass.length < 8)    { setErr('Password must be at least 8 characters'); return; }
+    if (!serverReady)            { setErr('Server is still starting — please wait a moment and try again'); return; }
+
     setSaving(true); setErr('');
 
     try {
-      // Create owner account + save company config in one request (no auth needed)
-      await api.post('/api/setup/create-owner', {
+      // Use setupApi (direct axios, no auth interceptor) to create owner account
+      await setupApi.post('/api/setup/create-owner', {
         name:     ownerName,
         email:    ownerEmail,
         password: ownerPass,
         companyConfig: {
-          name: bizName || 'My Print Shop',
-          email: bizEmail || '',
+          name:        bizName || 'My Print Shop',
+          email:       bizEmail || '',
           currency,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          enable_hst: currency === 'CAD',
-          hst_rate: 13,
+          timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone,
+          enable_hst:  currency === 'CAD',
+          hst_rate:    13,
         },
       });
 
-      // Apply theme
-      await window.printflow.setTheme(theme);
+      // Apply theme preference
+      await window.printflow?.setTheme?.(theme);
 
       // Mark setup complete
-      await window.printflow.setSetupComplete();
+      await window.printflow?.setSetupComplete?.();
 
-      // Auto-login
+      // Auto-login using the same direct axios instance
+      const loginRes = await setupApi.post('/api/auth/login', {
+        email:    ownerEmail,
+        password: ownerPass,
+      });
+
+      // Store the token and user in auth store directly
+      const { token, user } = loginRes.data;
+      await window.printflow?.setToken?.(token);
+
+      // Now use the main login function to set state
       await login(ownerEmail, ownerPass);
 
       setStep(4);
     } catch (e) {
-      setErr(e.response?.data?.error || e.message || 'Setup failed — please try again.');
+      const msg = e.response?.data?.error || e.response?.data?.errors?.[0]?.msg || e.message || 'Setup failed — please try again.';
+      setErr(msg);
     }
+
     setSaving(false);
   }
 
@@ -268,15 +298,9 @@ export default function SetupWizard({ onComplete }) {
   if (step === 0) return (
     <Wrap>
       <Card>
-        <StepIndicator current={0} />
+        <StepIndicator current={0}/>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: 20, margin: '0 auto 24px',
-            background: 'linear-gradient(135deg, rgba(0,113,227,0.12), rgba(0,113,227,0.04))',
-            border: '0.5px solid rgba(0,113,227,0.18)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#4DA8FF',
-          }}>
+          <div style={{ width: 72, height: 72, borderRadius: 20, margin: '0 auto 24px', background: 'linear-gradient(135deg,rgba(0,113,227,0.12),rgba(0,113,227,0.04))', border: '0.5px solid rgba(0,113,227,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4DA8FF' }}>
             {Icons.printer}
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-0.02em' }}>
@@ -298,16 +322,16 @@ export default function SetupWizard({ onComplete }) {
   if (step === 1) return (
     <Wrap>
       <Card>
-        <StepIndicator current={1} />
-        <SectionHeader icon={Icons.building} title="Your Business" desc="Used on quotes, invoices and customer communications." />
+        <StepIndicator current={1}/>
+        <SectionHeader icon={Icons.building} title="Your Business" desc="Used on quotes, invoices and customer communications."/>
         <Field label="Business name">
-          <Input type="text" value={bizName} onChange={e => setBizName(e.target.value)} placeholder="e.g. Northern Makers" autoFocus />
+          <Input type="text" value={bizName} onChange={e => setBizName(e.target.value)} placeholder="e.g. Northern Makers" autoFocus/>
         </Field>
         <Field label="Contact email" hint="Optional">
-          <Input type="email" value={bizEmail} onChange={e => setBizEmail(e.target.value)} placeholder="hello@yourshop.com" />
+          <Input type="email" value={bizEmail} onChange={e => setBizEmail(e.target.value)} placeholder="hello@yourshop.com"/>
         </Field>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <BackBtn onClick={() => setStep(0)} />
+          <BackBtn onClick={() => setStep(0)}/>
           <div style={{ flex: 2 }}><PrimaryBtn onClick={() => setStep(2)}>Continue</PrimaryBtn></div>
         </div>
       </Card>
@@ -318,27 +342,24 @@ export default function SetupWizard({ onComplete }) {
   if (step === 2) return (
     <Wrap>
       <Card>
-        <StepIndicator current={2} />
-        <SectionHeader icon={Icons.user} title="Create Your Account" desc="This will be the Owner account. You can add more team members later." />
+        <StepIndicator current={2}/>
+        <SectionHeader icon={Icons.user} title="Create Your Account" desc="This will be the Owner account. You can add more team members later."/>
         <Field label="Full name">
-          <Input type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="Alex Smith" autoFocus />
+          <Input type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="Alex Smith" autoFocus/>
         </Field>
         <Field label="Email address">
-          <Input type="email" value={ownerEmail} onChange={e => setOwnerEmail(e.target.value)} placeholder="you@example.com" />
+          <Input type="email" value={ownerEmail} onChange={e => setOwnerEmail(e.target.value)} placeholder="you@example.com"/>
         </Field>
         <Field label="Password" hint="Min. 8 characters">
-          <Input type="password" value={ownerPass} onChange={e => setOwnerPass(e.target.value)} placeholder="••••••••" />
+          <Input type="password" value={ownerPass} onChange={e => setOwnerPass(e.target.value)} placeholder="••••••••"/>
         </Field>
         <Field label="Confirm password">
-          <Input type="password" value={ownerPass2} onChange={e => setOwnerPass2(e.target.value)} placeholder="••••••••" />
+          <Input type="password" value={ownerPass2} onChange={e => setOwnerPass2(e.target.value)} placeholder="••••••••"/>
         </Field>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <BackBtn onClick={() => { setErr(''); setStep(1); }} />
+          <BackBtn onClick={() => { setErr(''); setStep(1); }}/>
           <div style={{ flex: 2 }}>
-            <PrimaryBtn
-              disabled={!ownerName || !ownerEmail || !ownerPass || !ownerPass2}
-              onClick={() => { setErr(''); setStep(3); }}
-            >
+            <PrimaryBtn disabled={!ownerName || !ownerEmail || !ownerPass || !ownerPass2} onClick={() => { setErr(''); setStep(3); }}>
               Continue
             </PrimaryBtn>
           </div>
@@ -351,8 +372,8 @@ export default function SetupWizard({ onComplete }) {
   if (step === 3) return (
     <Wrap>
       <Card>
-        <StepIndicator current={3} />
-        <SectionHeader icon={Icons.sliders} title="Preferences" desc="These can be changed at any time in Settings." />
+        <StepIndicator current={3}/>
+        <SectionHeader icon={Icons.sliders} title="Preferences" desc="These can be changed at any time in Settings."/>
         <Field label="Currency">
           <Select value={currency} onChange={e => setCurrency(e.target.value)}>
             <option value="CAD">CAD — Canadian Dollar</option>
@@ -365,27 +386,29 @@ export default function SetupWizard({ onComplete }) {
         <Field label="Appearance">
           <div style={{ display: 'flex', gap: 8 }}>
             {[['dark','Dark'],['light','Light'],['system','System']].map(([v, l]) => (
-              <button key={v} onClick={() => { setTheme(v); document.documentElement.setAttribute('data-theme', v); window.printflow?.setTheme?.(v); }} style={{
+              <button key={v} onClick={() => applyTheme(v)} style={{
                 flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
                 background: theme === v ? 'rgba(0,113,227,0.15)' : 'rgba(255,255,255,0.04)',
                 border: theme === v ? '0.5px solid rgba(0,113,227,0.4)' : '0.5px solid rgba(255,255,255,0.08)',
                 color: theme === v ? '#4DA8FF' : 'rgba(255,255,255,0.4)',
-                fontSize: 12, fontWeight: theme === v ? 600 : 400,
-                transition: 'all 0.15s',
+                fontSize: 12, fontWeight: theme === v ? 600 : 400, transition: 'all 0.15s',
               }}>{l}</button>
             ))}
           </div>
+          {!serverReady && (
+            <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Spinner/> Waiting for server to be ready...
+            </div>
+          )}
         </Field>
-        <ErrorBox msg={err} />
+        <ErrorBox msg={err}/>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <BackBtn onClick={() => { setErr(''); setStep(2); }} />
+          <BackBtn onClick={() => { setErr(''); setStep(2); }}/>
           <div style={{ flex: 2 }}>
-            <PrimaryBtn disabled={saving} onClick={finishSetup}>
+            <PrimaryBtn disabled={saving || !serverReady} onClick={finishSetup}>
               {saving
-                ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                    <Spinner /> Setting up...
-                  </span>
-                : 'Finish Setup'
+                ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><Spinner/> Setting up...</span>
+                : !serverReady ? 'Waiting for server...' : 'Finish Setup'
               }
             </PrimaryBtn>
           </div>
@@ -398,22 +421,12 @@ export default function SetupWizard({ onComplete }) {
   return (
     <Wrap>
       <Card>
-        <StepIndicator current={4} />
+        <StepIndicator current={4}/>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: '50%', margin: '0 auto 24px',
-            background: 'linear-gradient(135deg, rgba(48,209,88,0.15), rgba(48,209,88,0.05))',
-            border: '0.5px solid rgba(48,209,88,0.25)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#30D158',
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', margin: '0 auto 24px', background: 'linear-gradient(135deg,rgba(48,209,88,0.15),rgba(48,209,88,0.05))', border: '0.5px solid rgba(48,209,88,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#30D158' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-0.02em' }}>
-            You're all set
-          </h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-0.02em' }}>You're all set</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.75, marginBottom: 32 }}>
             PrintFlow Lite is ready. Welcome, {ownerName}.
           </p>
@@ -423,54 +436,5 @@ export default function SetupWizard({ onComplete }) {
         </div>
       </Card>
     </Wrap>
-  );
-}
-
-function SectionHeader({ icon, title, desc }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-      <div style={{
-        width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-        background: 'rgba(0,113,227,0.1)', border: '0.5px solid rgba(0,113,227,0.15)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4DA8FF',
-      }}>
-        {icon}
-      </div>
-      <div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>{title}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{desc}</div>
-      </div>
-    </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <span style={{
-      width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)',
-      borderTopColor: '#fff', borderRadius: '50%',
-      animation: 'spin 0.7s linear infinite', display: 'inline-block',
-    }}/>
-  );
-}
-
-function Wrap({ children }) {
-  return (
-    <div style={{
-      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at 20% 20%, rgba(0,113,227,0.06) 0%, transparent 60%), #060612',
-      overflow: 'hidden', position: 'relative',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
-    }}>
-      <div className="drag-region" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 44 }}/>
-      {children}
-      <style>{`
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        input::placeholder { color: rgba(255,255,255,0.18); }
-        select option { background: #0c0c1e; }
-        button:hover { opacity: 0.88; }
-      `}</style>
-    </div>
   );
 }
